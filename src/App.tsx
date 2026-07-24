@@ -1,5 +1,7 @@
 import { useState } from 'react'
+import { BlackHoleGalaxy } from './components/BlackHoleGalaxy'
 import { Starfield } from './components/Starfield'
+import { isBlackHoleGalaxyDemo } from './components/blackHoleGalaxyModel'
 import { Home } from './pages/Home'
 import { Classify } from './pages/Classify'
 import { NowNote } from './pages/NowNote'
@@ -14,6 +16,7 @@ import { resetAcp } from './lib/acp'
 import type { ChatMessage, Draft, Entry, Screen } from './types'
 
 const EMPTY_DRAFT: Draft = { mood: { valence: 0, labels: [] }, transcript: [], diaryEnabled: true }
+const BLACK_HOLE_DEMO = isBlackHoleGalaxyDemo(window.location.search)
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'home' })
@@ -65,9 +68,15 @@ export default function App() {
   }
 
   return (
-    <div className="stage">
-      <div className="aurora" />
-      <Starfield />
+    <div className={`stage ${BLACK_HOLE_DEMO ? 'stage--black-hole-demo' : ''}`}>
+      {BLACK_HOLE_DEMO ? (
+        <BlackHoleGalaxy />
+      ) : (
+        <>
+          <div className="aurora" />
+          <Starfield />
+        </>
+      )}
 
       {screen.name === 'home' && (
         <Home

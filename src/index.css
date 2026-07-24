@@ -49,6 +49,67 @@ body {
     linear-gradient(180deg, var(--bg-1), var(--bg-0) 70%);
 }
 
+.stage--black-hole-demo {
+  background: #000;
+}
+
+.stage--black-hole-demo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12), transparent 34%, rgba(0, 0, 0, 0.2)),
+    radial-gradient(circle at 50% 47%, transparent 0 26%, rgba(0, 0, 0, 0.16) 72%);
+}
+
+.black-hole-galaxy,
+.black-hole-galaxy-canvas,
+.black-hole-galaxy-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.black-hole-galaxy {
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #000;
+}
+
+.black-hole-galaxy-canvas {
+  display: block;
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+
+.black-hole-galaxy-canvas.is-ready {
+  opacity: 1;
+}
+
+.black-hole-galaxy-fallback {
+  opacity: 1;
+  transition: opacity 500ms ease;
+  background:
+    radial-gradient(circle at 50% 47%, #000 0 7%, transparent 7.8%),
+    radial-gradient(ellipse 30% 10% at 50% 47%, transparent 38%, rgba(225, 231, 242, 0.78) 43%, rgba(118, 130, 154, 0.2) 58%, transparent 72%),
+    #000;
+}
+
+.black-hole-galaxy-fallback.is-hidden {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .black-hole-galaxy-canvas,
+  .black-hole-galaxy-fallback {
+    transition: none;
+  }
+}
+
 .aurora {
   position: absolute;
   inset: -20%;
