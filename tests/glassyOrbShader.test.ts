@@ -15,3 +15,18 @@ test('fragment shader contains nebula, stars, Fresnel glass, and prismatic rim s
   assert.match(FRAGMENT_SHADER, /float fresnel/)
   assert.match(FRAGMENT_SHADER, /vec3 prism/)
 })
+
+test('shader remaps emotion colors into a saturated cosmic palette', () => {
+  assert.match(FRAGMENT_SHADER, /vec3 cosmicMain/)
+  assert.match(FRAGMENT_SHADER, /vec3 cosmicDeep/)
+  assert.match(FRAGMENT_SHADER, /vec3 cosmicLight/)
+})
+
+test('shader keeps the galactic core compact at mood-orb scale', () => {
+  assert.match(FRAGMENT_SHADER, /float galaxyCore/)
+  assert.match(FRAGMENT_SHADER, /exp\(-72\.0/)
+})
+
+test('shader keeps stars visible at the 188px product size', () => {
+  assert.match(FRAGMENT_SHADER, /const float STAR_RADIUS = 0\.105/)
+})

@@ -19,6 +19,7 @@ uniform float uPulse;
 uniform vec3 uColorMain;
 uniform vec3 uColorDeep;
 uniform vec3 uColorLight;
+const float STAR_RADIUS = 0.105;
 
 float hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -75,7 +76,7 @@ float starLayer(vec2 uv, float scale, float threshold) {
   float seed = hash21(cell);
   vec2 offset = vec2(seed, hash21(cell + 19.73)) - 0.5;
   float distanceToStar = length(local - offset * 0.64);
-  float star = (1.0 - smoothstep(0.0, 0.07, distanceToStar)) * step(threshold, seed);
+  float star = (1.0 - smoothstep(0.0, STAR_RADIUS, distanceToStar)) * step(threshold, seed);
   return star * (0.5 + 1.4 * hash21(cell + 4.1));
 }
 
@@ -83,6 +84,10 @@ mat2 rotation(float angle) {
   float sine = sin(angle);
   float cosine = cos(angle);
   return mat2(cosine, -sine, sine, cosine);
+}
+
+float galaxyCore(vec2 point) {
+  return exp(-72.0 * dot(point, point));
 }
 
 void main() {
@@ -100,15 +105,20 @@ void main() {
 
   float density = nebulaDensity(rotated);
   vec2 corePoint = rotated.xy - vec2(-0.12, 0.04);
-  float core = exp(-22.0 * dot(corePoint, corePoint));
+  float core = galaxyCore(corePoint);
   vec2 starUv = rotated.xy / max(0.28, 0.42 + rotated.z);
   float stars = starLayer(starUv + uTime * 0.0015, 24.0, 0.88);
   stars += starLayer(starUv - uTime * 0.001, 53.0, 0.965) * 0.75;
 
-  vec3 color = uColorDeep * (0.10 + density * 0.34);
-  color += uColorMain * density * 0.72;
-  color += uColorLight * (core * 1.45 + stars * 1.35);
-  color += uColorLight * uPulse * (0.12 + core * 0.35);
+  vec3 cosmicMain = mix(uColorMain, vec3(uColorLight.r, uColorDeep.g * 0.25, uColorLight.b), 0.48);
+  cosmicMain.g *= 0.82;
+  vec3 cosmicDeep = uColorDeep * vec3(0.55, 0.32, 0.82);
+  vec3 cosmicLight = mix(uColorLight, vec3(1.0, 0.72, 1.0), 0.25);
+
+  vec3 color = cosmicDeep * (0.10 + density * 0.34);
+  color += cosmicMain * density * 0.72;
+  color += cosmicLight * (core * 0.95 + stars * 1.35);
+  color += cosmicLight * uPulse * (0.12 + core * 0.35);
 
   float fresnel = pow(1.0 - z, 3.1);
   float rimAngle = atan(p.y, p.x);
@@ -120,8 +130,8 @@ void main() {
   float specular = pow(max(dot(normal, lightDirection), 0.0), 54.0);
   float softReflection = pow(max(dot(normal, normalize(vec3(-0.62, 0.34, 0.71))), 0.0), 8.0);
   color += vec3(1.0, 0.98, 1.0) * specular * 1.15;
-  color += uColorLight * softReflection * 0.18;
-  color += mix(uColorMain, uColorLight, 0.55) * fresnel * 0.24;
+  color += cosmicLight * softReflection * 0.18;
+  color += mix(cosmicMain, cosmicLight, 0.55) * fresnel * 0.24;
   color *= 0.82 + z * 0.2;
   color *= 1.0 - max(0.0, -p.y) * 0.18;
 
