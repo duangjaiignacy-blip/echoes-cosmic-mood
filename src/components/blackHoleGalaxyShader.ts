@@ -87,7 +87,12 @@ float starLayer(
   vec2 local = fract(grid) - 0.5;
   float seed = hash21(cell + layerSeed);
   vec2 offset = vec2(seed, hash21(cell + 7.31)) - 0.5;
-  float distanceToStar = length(local - offset * 0.58);
+  float driftTime = uTime * uSpeed;
+  vec2 stellarDrift = vec2(
+    sin(driftTime * (0.12 + seed * 0.05) + seed * 19.2),
+    cos(driftTime * (0.10 + seed * 0.04) + seed * 23.7)
+  ) * 0.018;
+  float distanceToStar = length(local - offset * 0.58 - stellarDrift);
   float radius = mix(radiusRange.x, radiusRange.y, seed);
   float star = 1.0 - smoothstep(radius * 0.34, radius, distanceToStar);
   float threshold = 1.0 - clamp(population * uDensity, 0.0, 0.62);
@@ -95,20 +100,50 @@ float starLayer(
   return star * step(threshold, seed) * twinkle;
 }
 
+float galaxyDepth(float phase) {
+  return fract(phase + uTime * uStarSpeed * uSpeed * 0.022);
+}
+
+float galaxyDepthFade(float depth) {
+  float fadeIn = smoothstep(0.0, 0.14, depth);
+  float fadeOut = 1.0 - smoothstep(0.82, 1.0, depth);
+  return fadeIn * fadeOut;
+}
+
+float animatedStarLayer(
+  vec2 uv,
+  float scale,
+  float layerSeed,
+  float population,
+  vec2 radiusRange,
+  float phase
+) {
+  float depth = galaxyDepth(phase);
+  float zoom = mix(0.84, 1.24, depth);
+  float depthGain = mix(0.72, 1.18, depth) * galaxyDepthFade(depth);
+  vec2 layerDrift = vec2(
+    sin(uTime * uSpeed * 0.055 + layerSeed),
+    cos(uTime * uSpeed * 0.043 + layerSeed * 1.37)
+  ) * 0.006;
+  return starLayer(uv * zoom + layerDrift, scale, layerSeed, population, radiusRange) * depthGain;
+}
+
 float microStarDust(vec2 uv) {
-  float dust = starLayer(
+  float dust = animatedStarLayer(
     uv + vec2(-0.19, 0.27),
     420.0,
     73.6,
     MICRO_DUST_POPULATION,
-    vec2(0.20, 0.38)
+    vec2(0.20, 0.38),
+    0.0
   ) * 0.20;
-  dust += starLayer(
+  dust += animatedStarLayer(
     uv + vec2(0.37, -0.16),
     332.0,
     91.8,
     MICRO_DUST_POPULATION * 0.82,
-    vec2(0.18, 0.34)
+    vec2(0.18, 0.34),
+    0.5
   ) * 0.24;
   return dust;
 }
@@ -124,10 +159,31 @@ float layeredStarField(vec2 uv) {
   float cluster = densityFloor + clusterA * 0.54 + clusterB * 0.31;
 
   float stars = microStarDust(uv) * mix(0.78, 1.22, clusterB);
-  stars += starLayer(uv, 214.0, 41.2, 0.105, vec2(0.13, 0.27)) * 0.25;
-  stars += starLayer(uv + vec2(0.13, -0.21), 132.0, 19.4, 0.075, vec2(0.10, 0.23)) * 0.42;
-  stars += starLayer(uv - vec2(0.31, 0.07), 72.0, 7.7, 0.038, vec2(0.07, 0.18)) * 0.72;
-  stars += starLayer(uv + vec2(0.08, 0.11), 34.0, 2.7, 0.010, vec2(0.045, 0.12)) * 1.24;
+  stars += animatedStarLayer(uv, 214.0, 41.2, 0.105, vec2(0.13, 0.27), 0.1667) * 0.25;
+  stars += animatedStarLayer(
+    uv + vec2(0.13, -0.21),
+    132.0,
+    19.4,
+    0.075,
+    vec2(0.10, 0.23),
+    0.3333
+  ) * 0.42;
+  stars += animatedStarLayer(
+    uv - vec2(0.31, 0.07),
+    72.0,
+    7.7,
+    0.038,
+    vec2(0.07, 0.18),
+    0.6667
+  ) * 0.72;
+  stars += animatedStarLayer(
+    uv + vec2(0.08, 0.11),
+    34.0,
+    2.7,
+    0.010,
+    vec2(0.045, 0.12),
+    0.8333
+  ) * 1.24;
   return stars * cluster;
 }
 
@@ -173,8 +229,9 @@ void main() {
   vec2 scale = vec2(aspect, 1.0);
   vec2 uv = (vUv * 2.0 - 1.0) * scale;
   vec2 pointer = (uPointer * 2.0 - 1.0) * scale;
-  float starTime = uTime * uStarSpeed * 0.006;
-  float stars = layeredStarField(repelPointer(uv + vec2(starTime, -starTime * 0.27), pointer));
+  float starRotation = uTime * uRotationSpeed * 0.18;
+  vec2 starUv = rotate2d(starRotation) * uv;
+  float stars = layeredStarField(repelPointer(starUv, pointer));
 
   vec2 vortexCenter = vec2(0.0, 0.52);
   vec2 vortexPoint = uv - vortexCenter;

@@ -32,7 +32,7 @@ test('vortex trails stay dust-softened', () => {
 })
 
 test('starfield uses six depth layers with micro dust and irregular density masks', () => {
-  const layerCalls = (BLACK_HOLE_FRAGMENT_SHADER.match(/starLayer\(/g) ?? []).length - 1
+  const layerCalls = (BLACK_HOLE_FRAGMENT_SHADER.match(/animatedStarLayer\(/g) ?? []).length - 1
 
   assert.equal(layerCalls, 6)
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float microStarDust/)
@@ -41,4 +41,29 @@ test('starfield uses six depth layers with micro dust and irregular density mask
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /const float MICRO_DUST_POPULATION = 0\.26/)
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /const float STARFIELD_DENSITY_FLOOR = 0\.52/)
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float densityFloor = STARFIELD_DENSITY_FLOOR/)
+})
+
+test('star layers cycle through restrained depth and ambient rotation', () => {
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float galaxyDepth/)
+  assert.match(
+    BLACK_HOLE_FRAGMENT_SHADER,
+    /fract\(phase \+ uTime \* uStarSpeed \* uSpeed \* 0\.022\)/,
+  )
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /mix\(0\.84, 1\.24, depth\)/)
+  assert.match(
+    BLACK_HOLE_FRAGMENT_SHADER,
+    /float starRotation = uTime \* uRotationSpeed \* 0\.18/,
+  )
+  assert.match(
+    BLACK_HOLE_FRAGMENT_SHADER,
+    /layeredStarField\(repelPointer\(starUv, pointer\)\)/,
+  )
+})
+
+test('individual stars drift while the vortex keeps fixed coordinates', () => {
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /vec2 stellarDrift/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /local - offset \* 0\.58 - stellarDrift/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /tinyVortex\(uv - vortexCenter\)/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /spiralDust\(vortexPoint\)/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /echoStream\(vortexPoint\)/)
 })
