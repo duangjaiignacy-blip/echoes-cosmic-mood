@@ -1,5 +1,5 @@
 import type { Entry } from '../types'
-import { moodColors } from '../components/MoodOrb'
+import { moodLabel, moodPalette } from '../components/moodEmotionModel'
 
 const W = 1080
 const H = 1350
@@ -41,7 +41,7 @@ export function renderCard(entry: Entry): string {
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d')!
-  const [c1, c2, c3] = moodColors(entry.mood.valence)
+  const [c1, c2, c3] = moodPalette(entry.mood.valence, entry.mood.emotionId)
 
   // 底色
   const bg = ctx.createLinearGradient(0, 0, 0, H)
@@ -96,7 +96,7 @@ export function renderCard(entry: Entry): string {
   ctx.fillText(heading, W / 2, H * 0.36)
 
   // 情绪词
-  const labelText = entry.mood.labels.length ? entry.mood.labels.join(' · ') : ''
+  const labelText = [moodLabel(entry.mood.valence, entry.mood.emotionId), ...entry.mood.labels].join(' · ')
   if (labelText) {
     ctx.font = '30px "PingFang SC", sans-serif'
     ctx.fillStyle = 'rgba(220,214,255,0.6)'

@@ -1,12 +1,8 @@
-import type { Draft, ChatMessage } from '../types'
+import { moodLabel } from '../components/moodEmotionModel.ts'
+import type { Draft, ChatMessage, MoodId } from '../types'
 
-export function moodWord(valence: number): string {
-  if (valence <= -2) return '低落'
-  if (valence === -1) return '有些沉'
-  if (valence === 0) return '平静'
-  if (valence === 1) return '还不错'
-  if (valence === 2) return '明亮'
-  return '雀跃'
+export function moodWord(valence: number, emotionId?: MoodId): string {
+  return moodLabel(valence, emotionId)
 }
 
 /** 首轮发给 Codex 的角色设定 + 开场引导请求 */
@@ -23,7 +19,7 @@ export function buildOpeningPrompt(draft: Draft): string {
     '- 不要提及你是 AI 模型、不要谈论代码或工具；',
     '- 循着这样的脉络推进：当时的情景 → 遇到的困难或快乐 → 为什么会这样、当时的背景 → 那一天对今天的自己有什么特别 → 现在还在延续当时的路吗，如果变了，发生了什么。',
     '',
-    `用户此刻的情绪：${moodWord(draft.mood.valence)}（${labels}）。`,
+    `用户此刻的情绪：${moodWord(draft.mood.valence, draft.mood.emotionId)}（${labels}）。`,
     `ta 想回到的时光：「${draft.timeMark ?? '过去的某一天'}」。`,
     '',
     '现在，请说一句开场白，欢迎 ta 回到那段时光，并问出第一个问题。',
@@ -84,7 +80,7 @@ export class FallbackGuide {
 export function fallbackDiary(draft: Draft): string {
   const userLines = draft.transcript.filter((m) => m.role === 'user').map((m) => m.text)
   const mark = draft.timeMark ?? '过去的某一天'
-  const mood = moodWord(draft.mood.valence)
+  const mood = moodWord(draft.mood.valence, draft.mood.emotionId)
   const body = userLines.join(' ')
   return (
     `今天，我的心情有些${mood}，思绪不自觉地飘回了${mark}。\n\n` +

@@ -54,12 +54,12 @@ export function Detail({ entryId, onCard, onBack }: Props) {
       <div style={{ textAlign: 'center' }}>
         <h1 className="title">{entry.kind === 'past' ? entry.timeMark ?? '过去的某一天' : '此刻'}</h1>
         <p className="subtitle" style={{ marginTop: 6 }}>
-          {moodWord(entry.mood.valence)}
+          {moodWord(entry.mood.valence, entry.mood.emotionId)}
           {entry.mood.labels.length ? ` · ${entry.mood.labels.join(' · ')}` : ''}
         </p>
       </div>
 
-      <MoodOrb valence={entry.mood.valence} size={110} />
+      <MoodOrb valence={entry.mood.valence} emotionId={entry.mood.emotionId} size={110} />
 
       {entry.diary ? (
         <div className="diary-paper" style={{ marginBottom: 18 }}>
