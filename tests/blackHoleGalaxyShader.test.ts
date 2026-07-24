@@ -25,3 +25,9 @@ test('pointer repulsion affects stars without moving the vortex center', () => {
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /layeredStarField\(repelPointer/)
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /tinyVortex\(uv - vortexCenter/)
 })
+
+test('deep space adds a dim fourth star layer and dust-softened vortex trails', () => {
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /starLayer\(uv \+ vec2\(-0\.19, 0\.27\), 318\.0, 73\.6\)/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float spiralDust/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /spiralDust\(vortexPoint\)/)
+})

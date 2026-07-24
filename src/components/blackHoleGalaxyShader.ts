@@ -82,17 +82,18 @@ float starLayer(vec2 uv, float scale, float layerSeed) {
   float distanceToStar = length(local - offset * 0.65);
   float radius = mix(0.035, 0.085, seed);
   float star = 1.0 - smoothstep(0.0, radius, distanceToStar);
-  float threshold = 1.0 - 0.035 * uDensity;
+  float threshold = 1.0 - 0.043 * uDensity;
   float twinkle = 1.0 + sin(uTime * (1.5 + seed * 3.0) + seed * 40.0) * uTwinkleIntensity;
   return star * step(threshold, seed) * twinkle;
 }
 
 float layeredStarField(vec2 uv) {
   float quietRegions = smoothstep(0.24, 0.78, fbm(uv * 2.15 + vec2(8.4, -3.7)));
-  float cluster = 0.16 + quietRegions * 1.08;
+  float cluster = 0.20 + quietRegions * 1.04;
   float stars = starLayer(uv, 66.0, 2.7);
   stars += starLayer(uv + vec2(0.13, -0.21), 132.0, 19.4) * 0.68;
   stars += starLayer(uv - vec2(0.31, 0.07), 224.0, 41.2) * 0.34;
+  stars += starLayer(uv + vec2(-0.19, 0.27), 318.0, 73.6) * 0.22;
   return stars * cluster;
 }
 
@@ -101,11 +102,22 @@ float tinyVortex(vec2 point) {
   vec2 ellipse = vec2(disk.x, disk.y / 0.42);
   float radius = length(ellipse);
   float angle = atan(ellipse.y, ellipse.x);
-  float rim = exp(-abs(radius - 0.034) * 128.0);
+  float rim = exp(-abs(radius - 0.034) * 105.0);
   float flow = angle * 7.0 + radius * 206.0 - uTime * (uSpeed * 0.82 + uRotationSpeed * 5.0);
-  float filaments = pow(0.5 + 0.5 * sin(flow + fbm(ellipse * 18.0) * 7.0), 12.0);
-  float diskMask = smoothstep(0.023, 0.034, radius) * (1.0 - smoothstep(0.086, 0.118, radius));
-  return rim * 1.2 + diskMask * (0.1 + filaments * 0.92);
+  float filaments = pow(0.5 + 0.5 * sin(flow + fbm(ellipse * 18.0) * 7.0), 16.0);
+  float diskMask = smoothstep(0.023, 0.034, radius) * (1.0 - smoothstep(0.09, 0.126, radius));
+  return rim * 0.72 + diskMask * (0.045 + filaments * 0.48);
+}
+
+float spiralDust(vec2 point) {
+  vec2 disk = rotate2d(-0.24) * point;
+  vec2 ellipse = vec2(disk.x, disk.y / 0.42);
+  float radius = length(ellipse);
+  float angle = atan(ellipse.y, ellipse.x);
+  float lanes = pow(0.5 + 0.5 * sin(angle * 5.0 - radius * 168.0 + uTime * uSpeed * 0.45), 9.0);
+  float grain = smoothstep(0.48, 0.76, noise2(ellipse * 238.0 + angle * 1.7));
+  float mask = smoothstep(0.026, 0.043, radius) * (1.0 - smoothstep(0.105, 0.158, radius));
+  return mask * grain * (0.36 + lanes * 0.64);
 }
 
 float echoStream(vec2 point) {
@@ -118,8 +130,8 @@ float echoStream(vec2 point) {
   float fade = 1.0 - smoothstep(0.055, 0.64, abs(along));
   float leftBias = mix(0.34, 1.0, smoothstep(-0.08, 0.3, along));
   float dust = smoothstep(0.47, 0.78, fbm(point * 31.0 - uTime * uSpeed * 0.08));
-  float threads = pow(0.5 + 0.5 * sin(across * 540.0 - along * 31.0 + uTime * 0.34), 13.0);
-  return body * fade * leftBias * (dust * 0.7 + threads * 0.3);
+  float threads = pow(0.5 + 0.5 * sin(across * 540.0 - along * 31.0 + uTime * 0.34), 18.0);
+  return body * fade * leftBias * (dust * 0.84 + threads * 0.16);
 }
 
 void main() {
@@ -133,13 +145,15 @@ void main() {
   vec2 vortexCenter = vec2(0.0, 0.52);
   vec2 vortexPoint = uv - vortexCenter;
   float vortex = tinyVortex(uv - vortexCenter);
+  float vortexDust = spiralDust(vortexPoint);
   float stream = echoStream(vortexPoint);
   float core = 1.0 - smoothstep(VORTEX_CORE_RADIUS, VORTEX_CORE_RADIUS * 1.7, length(vortexPoint));
   vec3 coldTint = hueColor(fract(uHueShift / 360.0));
   vec3 silver = mix(vec3(0.82, 0.85, 0.91), coldTint, uSaturation * 0.08);
   vec3 color = silver * stars * (0.72 + uGlowIntensity * 0.72);
-  color += silver * stream * (0.24 + uGlowIntensity * 0.36);
-  color += mix(silver, vec3(1.0), 0.62) * vortex * (0.68 + uGlowIntensity * 0.7);
+  color += silver * stream * (0.18 + uGlowIntensity * 0.28);
+  color += silver * vortexDust * (0.38 + uGlowIntensity * 0.38);
+  color += mix(silver, vec3(1.0), 0.48) * vortex * (0.58 + uGlowIntensity * 0.50);
   color *= 1.0 - core;
 
   float alpha = clamp(max(max(color.r, color.g), color.b) * 1.32, 0.0, 1.0);
