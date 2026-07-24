@@ -13,15 +13,15 @@ test('shader exposes every settings and interaction uniform', () => {
   }
 })
 
-test('fragment shader contains the reference-image shape stages', () => {
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float eventHorizon/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float accretionDisk/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float particleStream/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float starLayer/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /vec2 repelPointer/)
+test('fragment shader builds the approved deep starfield and tiny echo vortex', () => {
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float layeredStarField/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float tinyVortex/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float echoStream/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /const float VORTEX_CORE_RADIUS = 0\.018/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /vec2 vortexCenter = vec2\(0\.0, 0\.52\)/)
 })
 
-test('accretion disk keeps its reference-image tilt while its texture rotates', () => {
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /rotate2d\(-0\.314159\) \* point/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /uTime \* uRotationSpeed/)
+test('pointer repulsion affects stars without moving the vortex center', () => {
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /layeredStarField\(repelPointer/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /tinyVortex\(uv - vortexCenter/)
 })
