@@ -153,19 +153,24 @@ export function createBlackHoleGalaxyRenderer(
     cancelAnimationFrame(frameId)
     resizeObserver?.disconnect()
     window.removeEventListener('pointermove', pointerMove)
-    canvas.removeEventListener('pointerleave', pointerLeave)
+    window.removeEventListener('pointerleave', pointerLeave)
     canvas.removeEventListener('webglcontextlost', contextLost)
+  }
+
+  function fail(error?: unknown) {
+    if (destroyed) return
+    destroyed = true
+    stopRuntime()
+    onFailure(error)
   }
 
   function contextLost(event: Event) {
     event.preventDefault()
-    if (destroyed || runtimeStopped) return
-    stopRuntime()
-    onFailure(new Error('WebGL context lost'))
+    fail(new Error('Black-hole WebGL context lost'))
   }
 
   window.addEventListener('pointermove', pointerMove)
-  canvas.addEventListener('pointerleave', pointerLeave)
+  window.addEventListener('pointerleave', pointerLeave)
   canvas.addEventListener('webglcontextlost', contextLost)
 
   resizeObserver = typeof ResizeObserver === 'undefined'
