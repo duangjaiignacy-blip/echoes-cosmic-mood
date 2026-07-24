@@ -29,6 +29,8 @@ export function MoodExpression({ mood }: { mood: MoodVisual }) {
     '--mood-blush': mood.blush,
     '--mood-accent': mood.accent,
   }
+  const blush = mood.accents.filter(({ layer }) => layer === 'blush')
+  const accents = mood.accents.filter(({ layer }) => layer !== 'blush')
 
   return (
     <svg
@@ -37,9 +39,10 @@ export function MoodExpression({ mood }: { mood: MoodVisual }) {
       aria-hidden="true"
       style={style}
     >
-      <StrokeGroup name="accents" strokes={mood.accents} />
+      <StrokeGroup name="blush" strokes={blush} />
       <StrokeGroup name="face" strokes={[...mood.brows, ...mood.eyes, ...mood.mouth]} />
       <StrokeGroup name="hands" strokes={mood.hands} />
+      <StrokeGroup name="accents" strokes={accents} />
     </svg>
   )
 }

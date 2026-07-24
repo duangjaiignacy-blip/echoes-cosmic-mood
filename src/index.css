@@ -447,6 +447,11 @@ body {
 }
 
 /* ---------- 可爱宇宙情绪表情层 ---------- */
+.corb[data-orb-mood] .corb-canvas,
+.corb[data-orb-mood] .corb-fallback {
+  filter: brightness(1.35) saturate(0.72);
+}
+
 .mood-expression {
   position: absolute;
   inset: -12%;
@@ -459,7 +464,7 @@ body {
 }
 
 .mood-stroke {
-  color: var(--mood-ink);
+  color: color-mix(in srgb, var(--mood-ink) 84%, white);
   stroke: currentColor;
   stroke-width: 2.55;
   stroke-linecap: round;
@@ -468,7 +473,7 @@ body {
 }
 
 .mood-stroke--hand {
-  color: var(--mood-ink);
+  color: color-mix(in srgb, var(--mood-ink) 84%, white);
   stroke-width: 2.35;
 }
 
@@ -495,6 +500,11 @@ body {
 .mood-expression__accents {
   transform-box: fill-box;
   transform-origin: center;
+}
+
+.mood-expression__face,
+.mood-expression__hands {
+  translate: 0 4px;
 }
 
 .mood-expression--sink .mood-expression__accents { animation: mood-marks-fall 6.8s ease-in-out infinite; }

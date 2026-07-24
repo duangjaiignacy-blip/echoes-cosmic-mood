@@ -145,10 +145,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
       { d: 'M76 94 Q83 100 91 94', layer: 'face' },
       { d: 'M109 95 Q117 101 125 93', layer: 'face' },
     ],
-    brows: [
-      { d: 'M77 86 Q84 83 91 86', layer: 'face' },
-      { d: 'M109 87 Q117 83 124 85', layer: 'face' },
-    ],
+    brows: [],
     mouth: [{ d: 'M92 117 Q100 126 111 116', layer: 'face' }],
     hands: [
       { d: 'M61 137 C69 144 79 147 89 144 C93 143 95 140 94 137', layer: 'hand' },
@@ -236,14 +233,12 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     motion: 'spark',
     spinOffset: 4,
     eyes: [
-      { d: 'M75 91 C75 84 80 80 86 82 C92 84 93 91 89 97 C85 102 76 98 75 91', layer: 'face' },
-      { d: 'M108 91 C108 83 114 79 120 82 C126 85 126 92 122 97 C117 101 109 98 108 91', layer: 'face' },
-      { d: 'M82 89 A2 3 0 1 0 86 89 A2 3 0 1 0 82 89', layer: 'face', fill: true },
-      { d: 'M115 88 A2 3 0 1 0 119 88 A2 3 0 1 0 115 88', layer: 'face', fill: true },
+      { d: 'M73 94 Q83 82 94 94', layer: 'face' },
+      { d: 'M106 94 Q117 81 128 93', layer: 'face' },
     ],
     brows: [
-      { d: 'M76 76 Q84 71 91 77', layer: 'face' },
-      { d: 'M109 76 Q117 70 125 76', layer: 'face' },
+      { d: 'M76 78 Q83 74 90 78', layer: 'face' },
+      { d: 'M110 78 Q117 73 124 77', layer: 'face' },
     ],
     mouth: [{ d: 'M89 113 C94 108 108 108 114 113 C113 126 106 132 101 132 C95 131 90 125 89 113 Z', layer: 'face' }],
     hands: [
@@ -427,10 +422,10 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     motion: 'orbit',
     spinOffset: 5,
     eyes: [
-      { d: 'M74 94 C76 84 84 80 92 88 Q89 101 80 101', layer: 'face' },
-      { d: 'M108 88 C116 80 125 85 127 94 Q120 102 111 99', layer: 'face' },
-      { d: 'M82 91 A2 3 0 1 0 86 91 A2 3 0 1 0 82 91', layer: 'face', fill: true },
-      { d: 'M116 91 A2 3 0 1 0 120 91 A2 3 0 1 0 116 91', layer: 'face', fill: true },
+      { d: 'M76 94 Q84 86 92 94', layer: 'face' },
+      { d: 'M109 92 Q118 84 127 92', layer: 'face' },
+      { d: 'M83 91 A2 2.6 0 1 0 87 91 A2 2.6 0 1 0 83 91', layer: 'face', fill: true },
+      { d: 'M116 91 A2 2.6 0 1 0 120 91 A2 2.6 0 1 0 116 91', layer: 'face', fill: true },
     ],
     brows: [
       { d: 'M74 78 Q83 72 93 82', layer: 'face' },
@@ -442,7 +437,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
       { d: 'M143 133 C135 125 131 115 129 104 M134 117 L140 112 M131 112 L134 105 M130 115 L125 107', layer: 'hand' },
     ],
     accents: [
-      { d: 'M54 38 C80 16 118 22 145 39 C165 51 178 72 171 91 C164 108 139 111 121 101 C101 90 98 65 115 51 C133 36 157 42 169 57', layer: 'accent' },
+      { d: 'M8 54 C-8 43 -13 58 1 64 C15 71 15 84 1 88 C-10 91 -15 82 -9 75 C-3 68 8 75 5 82', layer: 'accent' },
       { d: 'M42 82 C37 90 38 97 43 100 C48 97 48 89 42 82', layer: 'tear' },
       { d: 'M160 116 C155 124 156 131 161 134 C166 130 166 123 160 116', layer: 'tear' },
       { d: 'M28 117 L20 123 M32 128 L25 136 M172 103 L181 99 M170 132 L178 138', layer: 'accent' },
@@ -459,10 +454,8 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     motion: 'hold',
     spinOffset: -1,
     eyes: [
-      { d: 'M70 91 C70 78 79 72 89 77 C99 82 97 99 88 105 C78 109 70 102 70 91', layer: 'face' },
-      { d: 'M104 91 C104 78 113 72 123 77 C133 82 131 99 122 105 C112 109 104 102 104 91', layer: 'face' },
-      { d: 'M80 88 A3 4 0 1 0 86 88 A3 4 0 1 0 80 88', layer: 'face', fill: true },
-      { d: 'M114 88 A3 4 0 1 0 120 88 A3 4 0 1 0 114 88', layer: 'face', fill: true },
+      { d: 'M74 84 C79 75 90 75 95 84 C99 94 94 104 85 106 C76 106 70 95 74 84 Z', layer: 'face', fill: true },
+      { d: 'M108 84 C113 75 124 75 129 84 C133 94 128 104 119 106 C110 106 104 95 108 84 Z', layer: 'face', fill: true },
     ],
     brows: [
       { d: 'M71 68 Q81 62 93 72', layer: 'face' },
@@ -476,6 +469,8 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accents: [
       { d: 'M63 102 A6 6 0 1 0 75 102 A6 6 0 1 0 63 102', layer: 'tear', fill: true },
       { d: 'M128 103 A7 7 0 1 0 142 103 A7 7 0 1 0 128 103', layer: 'tear', fill: true },
+      { d: 'M79 83 A2.6 2.6 0 1 0 84.2 83 A2.6 2.6 0 1 0 79 83', layer: 'tear', fill: true },
+      { d: 'M113 83 A2.6 2.6 0 1 0 118.2 83 A2.6 2.6 0 1 0 113 83', layer: 'tear', fill: true },
       { d: 'M51 43 C77 22 119 18 150 39 C169 52 179 72 177 94', layer: 'accent' },
       { d: 'M176 109 C173 133 160 153 140 165', layer: 'accent' },
       { d: 'M69 111 L76 109 M68 116 L76 114 M123 109 L131 111 M123 114 L131 116', layer: 'blush' },
@@ -492,14 +487,14 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     motion: 'wobble',
     spinOffset: 4,
     eyes: [
-      { d: 'M73 91 C74 83 80 80 87 83 C92 86 92 95 87 99 C80 102 73 98 73 91', layer: 'face' },
-      { d: 'M108 91 C109 83 115 80 122 83 C127 86 127 95 122 99 C115 102 108 98 108 91', layer: 'face' },
-      { d: 'M78 90 A2 3 0 1 0 82 90 A2 3 0 1 0 78 90', layer: 'face', fill: true },
-      { d: 'M113 90 A2 3 0 1 0 117 90 A2 3 0 1 0 113 90', layer: 'face', fill: true },
+      { d: 'M73 92 Q82 98 92 90', layer: 'face' },
+      { d: 'M108 90 Q117 96 127 88', layer: 'face' },
+      { d: 'M85 92 A2 2.8 0 1 0 89 92 A2 2.8 0 1 0 85 92', layer: 'face', fill: true },
+      { d: 'M120 90 A2 2.8 0 1 0 124 90 A2 2.8 0 1 0 120 90', layer: 'face', fill: true },
     ],
     brows: [
-      { d: 'M73 76 Q81 72 90 78', layer: 'face' },
-      { d: 'M108 78 Q117 72 126 76', layer: 'face' },
+      { d: 'M73 77 Q81 73 90 78', layer: 'face' },
+      { d: 'M109 79 Q118 73 127 75', layer: 'face' },
     ],
     mouth: [{ d: 'M95 116 C95 111 100 109 105 111 C110 114 109 121 104 123 C99 125 95 122 95 116 Z', layer: 'face' }],
     hands: [
