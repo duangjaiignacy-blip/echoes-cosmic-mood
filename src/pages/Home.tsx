@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { MoodOrb } from '../components/MoodOrb'
+import { useRotary } from '../lib/useRotary'
 import type { MoodState } from '../types'
 
 const VALENCE_TEXT: Record<number, string> = {
@@ -12,7 +13,10 @@ const VALENCE_TEXT: Record<number, string> = {
   [3]: '雀跃',
 }
 
-const LABELS = ['怀念', '想念', '感动', '温暖', '喜悦', '平静', '孤独', '失落', '遗憾', '迷茫', '悸动', '释然']
+const WORDS = ['怀念', '想念', '感动', '温暖', '喜悦', '悸动', '释然', '平静', '孤独', '失落', '遗憾', '迷茫']
+
+const DIAL = 300 // 拨盘直径
+const WORD_R = 136 // 词环半径
 
 interface Props {
   onNext: (mood: MoodState) => void
@@ -21,72 +25,191 @@ interface Props {
 }
 
 export function Home({ onNext, onTimeline, entryCount }: Props) {
-  const [valence, setValence] = useState(0)
+  const [step, setStep] = useState<'feel' | 'word'>('feel')
+
+  /* ---- 第一步：旋转调整整体感受 ---- */
+  const [angle, setAngle] = useState(0) // -270..270，每 90° 一档
+  const [pulse, setPulse] = useState(false)
+  const prevLevel = useRef(0)
+
+  const valence = angle / 90 // 连续值 -3..3
+  const level = Math.max(-3, Math.min(3, Math.round(valence)))
+
+  const feelDial = useRotary((d) => {
+    setAngle((a) => {
+      const next = Math.max(-270, Math.min(270, a + d))
+      const lv = Math.round(next / 90)
+      if (lv !== prevLevel.current) {
+        prevLevel.current = lv
+        navigator.vibrate?.(8)
+        setPulse(true)
+        setTimeout(() => setPulse(false), 450)
+      }
+      return next
+    })
+  })
+
+  /* ---- 第二步：词环旋转选词 ---- */
+  const [ringAngle, setRingAngle] = useState(0)
+  const [smooth, setSmooth] = useState(false)
   const [labels, setLabels] = useState<string[]>([])
 
-  const toggle = (l: string) =>
-    setLabels((prev) => (prev.includes(l) ? prev.filter((x) => x !== l) : prev.length < 3 ? [...prev, l] : prev))
+  const wordDial = useRotary(
+    (d) => {
+      setSmooth(false)
+      setRingAngle((a) => a + d)
+    },
+    () => {
+      // 松手后吸附到最近的词位
+      setSmooth(true)
+      setRingAngle((a) => Math.round(a / 30) * 30)
+    },
+  )
+
+  const norm = (a: number) => ((a % 360) + 360) % 360
+  // 顶部（-90°）对准的词
+  const focusIdx = (() => {
+    let best = 0
+    let bestDiff = 361
+    for (let i = 0; i < WORDS.length; i++) {
+      const a = norm(i * 30 - 90 + ringAngle)
+      const diff = Math.min(Math.abs(a - 270), 360 - Math.abs(a - 270))
+      if (diff < bestDiff) {
+        bestDiff = diff
+        best = i
+      }
+    }
+    return best
+  })()
+
+  const toggleWord = (w: string) =>
+    setLabels((prev) => (prev.includes(w) ? prev.filter((x) => x !== w) : prev.length < 3 ? [...prev, w] : prev))
 
   return (
     <div className="screen screen-scroll">
       <div className="topbar">
-        <div>
-          <div className="eyebrow">ECHOES · 回响</div>
-        </div>
-        <button className="back-link" onClick={onTimeline}>
-          回忆 {entryCount > 0 ? `· ${entryCount}` : ''}
-        </button>
-      </div>
-
-      <div style={{ textAlign: 'center', marginTop: 8 }}>
-        <h1 className="title">此刻，你的心里泛起了什么？</h1>
-        <p className="subtitle" style={{ marginTop: 10 }}>
-          不用思考未来，也不用计划什么。
-          <br />
-          只是感受，此刻的波动。
-        </p>
-      </div>
-
-      <MoodOrb valence={valence} />
-
-      <div style={{ textAlign: 'center', marginBottom: 18 }}>
-        <span
-          className="title"
-          style={{ fontSize: 20, transition: 'opacity 0.4s' }}
-        >
-          {VALENCE_TEXT[valence]}
-        </span>
-      </div>
-
-      <input
-        className="mood-slider"
-        type="range"
-        min={-3}
-        max={3}
-        step={1}
-        value={valence}
-        onChange={(e) => setValence(Number(e.target.value))}
-        aria-label="情绪波动"
-      />
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, marginBottom: 26 }}>
-        <span className="hint">非常低落</span>
-        <span className="hint">非常明亮</span>
-      </div>
-
-      <div className="chips" style={{ marginBottom: 30 }}>
-        {LABELS.map((l) => (
-          <button key={l} className={`chip ${labels.includes(l) ? 'on' : ''}`} onClick={() => toggle(l)}>
-            {l}
+        <div className="eyebrow">ECHOES · 回响</div>
+        {step === 'feel' ? (
+          <button className="back-link" onClick={onTimeline}>
+            回忆 {entryCount > 0 ? `· ${entryCount}` : ''}
           </button>
-        ))}
+        ) : (
+          <button className="back-link" onClick={() => setStep('feel')}>
+            ← 重新感受
+          </button>
+        )}
       </div>
 
-      <button className="btn btn-primary" onClick={() => onNext({ valence, labels })}>
-        继续
-      </button>
-      <p className="hint" style={{ textAlign: 'center', marginTop: 14 }}>
-        最多选 3 个词，也可以一个都不选
-      </p>
+      {step === 'feel' ? (
+        <>
+          <div style={{ textAlign: 'center', marginTop: 6 }}>
+            <h1 className="title">此刻，你的心里泛起了什么？</h1>
+          </div>
+
+          {/* 拨盘 */}
+          <div ref={feelDial} className="dial" style={{ width: DIAL, height: DIAL, marginTop: 26 }}>
+            <div className="dial-ring" />
+            <div
+              className="dial-dot"
+              style={{ transform: `rotate(${angle}deg) translateY(-${DIAL / 2 - 7}px)` }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'grid',
+                placeItems: 'center',
+                pointerEvents: 'none',
+              }}
+            >
+              <MoodOrb valence={valence} size={188} spin={angle * 1.6} pulse={pulse} />
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center', marginTop: 26, minHeight: 44 }}>
+            <span className="title" style={{ fontSize: 24 }}>
+              {VALENCE_TEXT[level]}
+            </span>
+          </div>
+
+          <div className="dial-hint" style={{ marginTop: 8, marginBottom: 26 }}>
+            <span className="arc">⟳</span>
+            <span>沿着光环旋转，找到此刻的感受</span>
+          </div>
+
+          <button className="btn btn-primary" onClick={() => setStep('word')}>
+            就是这种感觉
+          </button>
+        </>
+      ) : (
+        <>
+          <div style={{ textAlign: 'center', marginTop: 6 }}>
+            <h1 className="title" style={{ fontSize: 22 }}>
+              如果要给它一个名字
+            </h1>
+          </div>
+
+          {/* 词环拨盘 */}
+          <div ref={wordDial} className="dial" style={{ width: DIAL + 60, height: DIAL + 60, marginTop: 30 }}>
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'grid',
+                placeItems: 'center',
+                pointerEvents: 'none',
+              }}
+            >
+              <MoodOrb valence={valence} size={118} spin={ringAngle * 1.4} />
+            </div>
+            <div className="word-ring">
+              {WORDS.map((w, i) => {
+                const a = ((i * 30 - 90 + ringAngle) * Math.PI) / 180
+                const x = Math.cos(a) * WORD_R
+                const y = Math.sin(a) * WORD_R
+                const cls = [
+                  'word-item',
+                  i === focusIdx ? 'focus' : '',
+                  labels.includes(w) ? 'picked' : '',
+                  smooth ? 'smooth' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')
+                return (
+                  <span
+                    key={w}
+                    className={cls}
+                    style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }}
+                    onClick={() => toggleWord(w)}
+                  >
+                    {w}
+                  </span>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="dial-hint" style={{ marginTop: 18 }}>
+            <span className="arc">⟳</span>
+            <span>旋转词环，轻点收下最贴切的词（最多 3 个）</span>
+          </div>
+
+          <div style={{ textAlign: 'center', minHeight: 30, marginTop: 12, marginBottom: 14 }}>
+            {labels.length > 0 && (
+              <span className="subtitle" style={{ fontSize: 15, color: '#c9befc' }}>
+                {labels.join(' · ')}
+              </span>
+            )}
+          </div>
+
+          <button className="btn btn-primary" onClick={() => onNext({ valence: level, labels })}>
+            继续
+          </button>
+          <p className="hint" style={{ textAlign: 'center', marginTop: 12 }}>
+            也可以不选任何词，感受不必都有名字
+          </p>
+        </>
+      )}
     </div>
   )
 }
