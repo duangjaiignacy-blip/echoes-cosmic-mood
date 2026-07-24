@@ -446,6 +446,165 @@ body {
   pointer-events: none;
 }
 
+/* ---------- 可爱宇宙情绪表情层 ---------- */
+.mood-expression {
+  position: absolute;
+  inset: -12%;
+  z-index: 4;
+  width: 124%;
+  height: 124%;
+  overflow: visible;
+  pointer-events: none;
+  animation: mood-expression-arrive 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mood-stroke {
+  color: var(--mood-ink);
+  stroke: currentColor;
+  stroke-width: 2.55;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.mood-stroke--hand {
+  color: var(--mood-ink);
+  stroke-width: 2.35;
+}
+
+.mood-stroke--accent {
+  color: var(--mood-accent);
+  stroke-width: 1.85;
+  opacity: 0.84;
+}
+
+.mood-stroke--tear {
+  color: color-mix(in srgb, var(--mood-accent) 72%, white);
+  stroke-width: 1.7;
+  opacity: 0.92;
+}
+
+.mood-stroke--blush {
+  color: var(--mood-blush);
+  stroke-width: 2;
+  opacity: 0.92;
+}
+
+.mood-expression__face,
+.mood-expression__hands,
+.mood-expression__accents {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.mood-expression--sink .mood-expression__accents { animation: mood-marks-fall 6.8s ease-in-out infinite; }
+.mood-expression--settle .mood-expression__face { animation: mood-settle 7.2s ease-in-out infinite; }
+.mood-expression--breathe .mood-expression__face { animation: mood-breathe 6.4s ease-in-out infinite; }
+.mood-expression--breathe .mood-expression__accents { animation: mood-halo-breathe 6.4s ease-in-out infinite; }
+.mood-expression--lift .mood-expression__hands { animation: mood-wave 5.6s ease-in-out infinite; transform-origin: 70% 70%; }
+.mood-expression--glow .mood-expression__accents { animation: mood-sparkle 5.2s ease-in-out infinite; }
+.mood-expression--spark .mood-expression__hands { animation: mood-hands-rise 4.8s ease-in-out infinite; }
+.mood-expression--spark .mood-expression__accents { animation: mood-sparkle 4.8s ease-in-out infinite; }
+.mood-expression--withdraw .mood-expression__face { animation: mood-withdraw 7.6s ease-in-out infinite; }
+.mood-expression--withdraw .mood-expression__hands { animation: mood-hold 7.6s ease-in-out infinite; }
+.mood-expression--rain .mood-expression__accents { animation: mood-marks-fall 5.8s linear infinite; }
+.mood-expression--bristle .mood-expression__hands { animation: mood-bristle 4.4s ease-in-out infinite; }
+.mood-expression--bristle .mood-expression__accents { animation: mood-sparkle 4.4s ease-in-out infinite; }
+.mood-expression--shiver .mood-expression__face,
+.mood-expression--shiver .mood-expression__hands { animation: mood-shiver 4.2s ease-in-out infinite; }
+.mood-expression--fade .mood-expression__accents { animation: mood-fade 7.8s ease-in-out infinite; }
+.mood-expression--orbit .mood-expression__accents { animation: mood-orbit 6.2s ease-in-out infinite; }
+.mood-expression--hold .mood-expression__hands { animation: mood-hold 7.4s ease-in-out infinite; }
+.mood-expression--hold .mood-expression__face { animation: mood-tear-hold 7.4s ease-in-out infinite; }
+.mood-expression--wobble .mood-expression__face,
+.mood-expression--wobble .mood-expression__hands { animation: mood-wobble 5.8s ease-in-out infinite; }
+.mood-expression--wobble .mood-expression__accents { animation: mood-orbit 5.8s ease-in-out infinite; }
+
+@keyframes mood-expression-arrive {
+  from { opacity: 0; filter: blur(2px); transform: scale(0.96); }
+  to { opacity: 1; filter: none; transform: scale(1); }
+}
+
+@keyframes mood-marks-fall {
+  0%, 100% { transform: translateY(-1px); opacity: 0.72; }
+  50% { transform: translateY(3px); opacity: 1; }
+}
+
+@keyframes mood-settle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(1.4px); }
+}
+
+@keyframes mood-breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-0.8px) scale(1.012); }
+}
+
+@keyframes mood-halo-breathe {
+  0%, 100% { opacity: 0.62; transform: scale(0.985); }
+  50% { opacity: 0.94; transform: scale(1.018); }
+}
+
+@keyframes mood-wave {
+  0%, 72%, 100% { transform: rotate(0deg); }
+  79% { transform: rotate(-5deg); }
+  88% { transform: rotate(4deg); }
+}
+
+@keyframes mood-sparkle {
+  0%, 100% { opacity: 0.58; transform: scale(0.96); }
+  48% { opacity: 1; transform: scale(1.045); }
+}
+
+@keyframes mood-hands-rise {
+  0%, 100% { transform: translateY(0); }
+  45% { transform: translateY(-2.2px); }
+}
+
+@keyframes mood-withdraw {
+  0%, 100% { transform: translateY(0) scale(1); }
+  55% { transform: translateY(1.5px) scale(0.985); }
+}
+
+@keyframes mood-hold {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
+}
+
+@keyframes mood-bristle {
+  0%, 86%, 100% { transform: translateX(0); }
+  89% { transform: translateX(-1.2px); }
+  93% { transform: translateX(1.2px); }
+}
+
+@keyframes mood-shiver {
+  0%, 82%, 100% { transform: translateX(0); }
+  86% { transform: translateX(-1px); }
+  90% { transform: translateX(1px); }
+  94% { transform: translateX(-0.6px); }
+}
+
+@keyframes mood-fade {
+  0%, 100% { opacity: 0.48; transform: translateY(0); }
+  52% { opacity: 0.9; transform: translateY(2px); }
+}
+
+@keyframes mood-orbit {
+  0%, 100% { transform: rotate(-1.2deg); }
+  50% { transform: rotate(1.2deg); }
+}
+
+@keyframes mood-tear-hold {
+  0%, 100% { transform: translateY(0); }
+  55% { transform: translateY(0.8px); }
+}
+
+@keyframes mood-wobble {
+  0%, 78%, 100% { transform: rotate(0deg); }
+  84% { transform: rotate(-0.8deg); }
+  92% { transform: rotate(0.8deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .corb,
   .corb-nebula {
@@ -456,6 +615,21 @@ body {
   .corb-fallback {
     transition: none;
   }
+
+  .mood-expression {
+    animation: mood-expression-fade 160ms linear both;
+  }
+
+  .mood-expression__face,
+  .mood-expression__hands,
+  .mood-expression__accents {
+    animation: none !important;
+  }
+}
+
+@keyframes mood-expression-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* ---------- 拨盘 ---------- */
@@ -583,8 +757,8 @@ body {
 
 @keyframes echo-orb-drop {
   0% { transform: translateY(0) scale(1); }
-  29% { transform: translateY(18px) scale(1.025, 0.965); }
-  62% { transform: translateY(-5px) scale(0.99, 1.015); }
+  29% { transform: translateY(18px) scale(0.985); }
+  62% { transform: translateY(-5px) scale(1.008); }
   100% { transform: translateY(0) scale(1); }
 }
 

@@ -181,6 +181,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
                 spin={echoVoid ? echoMoodIndex * 24 : angle * 1.6}
                 pulse={pulse}
                 tone={echoVoid ? 'echo' : 'default'}
+                emotionId={echoVoid ? echoMood.id : undefined}
               />
             </div>
           </div>
@@ -241,6 +242,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
                 size={118}
                 spin={ringAngle * 1.4}
                 tone={echoVoid ? 'echo' : 'default'}
+                emotionId={echoVoid ? echoMood.id : undefined}
               />
             </div>
             <div className="word-ring">

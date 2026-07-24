@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { createGlassyOrbRenderer, type GlassyOrbRenderer } from './glassyOrbRenderer'
+import { MoodExpression } from './MoodExpression'
+import { getMoodVisual } from './moodEmotionModel'
 import { echoMoodColorsF, moodColorsF } from './moodOrbModel'
+import type { MoodId } from '../types'
 
 export { moodColors } from './moodOrbModel'
 
@@ -13,17 +16,29 @@ interface Props {
   pulse?: boolean
   /** 独立回响深空 Demo 使用低饱和月银配色。 */
   tone?: 'default' | 'echo'
+  /** 具名情绪使用离散色彩和手绘表情；缺省时保持旧版纯玻璃球。 */
+  emotionId?: MoodId
 }
 
 type RendererStatus = 'pending' | 'webgl' | 'fallback'
 
 /** WebGL 宇宙玻璃情绪球，不可用时自动回退到 CSS 晶体球。 */
-export function MoodOrb({ valence, size = 200, spin = 0, pulse = false, tone = 'default' }: Props) {
+export function MoodOrb({
+  valence,
+  size = 200,
+  spin = 0,
+  pulse = false,
+  tone = 'default',
+  emotionId,
+}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rendererRef = useRef<GlassyOrbRenderer | null>(null)
   const [rendererStatus, setRendererStatus] = useState<RendererStatus>('pending')
-  const palette = tone === 'echo' ? echoMoodColorsF(valence) : moodColorsF(valence)
+  const mood = emotionId ? getMoodVisual(emotionId) : undefined
+  const palette = mood?.palette ?? (tone === 'echo' ? echoMoodColorsF(valence) : moodColorsF(valence))
   const [main, deep, light] = palette
+  const effectiveSpin = spin + (mood?.spinOffset ?? 0)
+  const silverTone = tone === 'echo' && !mood
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -45,16 +60,17 @@ export function MoodOrb({ valence, size = 200, spin = 0, pulse = false, tone = '
   useEffect(() => {
     rendererRef.current?.update({
       palette: [main, deep, light],
-      spin,
+      spin: effectiveSpin,
       pulse,
-      silverTone: tone === 'echo',
+      silverTone,
     })
-  }, [main, deep, light, spin, pulse, tone])
+  }, [main, deep, light, effectiveSpin, pulse, silverTone])
 
   return (
     <div
       className={`corb ${pulse ? 'corb-pulse' : ''}`}
       data-orb-status={rendererStatus}
+      data-orb-mood={emotionId}
       style={{ width: size, height: size }}
     >
       <div
@@ -83,7 +99,7 @@ export function MoodOrb({ valence, size = 200, spin = 0, pulse = false, tone = '
             ].join(', '),
           }}
         >
-          <div className="corb-nebula-spin" style={{ transform: `rotate(${spin}deg)` }}>
+          <div className="corb-nebula-spin" style={{ transform: `rotate(${effectiveSpin}deg)` }}>
             <div
               className="corb-nebula"
               style={{
@@ -98,6 +114,8 @@ export function MoodOrb({ valence, size = 200, spin = 0, pulse = false, tone = '
           <div className="corb-arc" />
         </div>
       </div>
+
+      {mood && <MoodExpression key={mood.id} mood={mood} />}
 
       <div className="corb-caustic" style={{ background: `radial-gradient(ellipse, ${main}55, transparent 65%)` }} />
     </div>
