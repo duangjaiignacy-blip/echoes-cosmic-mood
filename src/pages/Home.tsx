@@ -1,5 +1,12 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MoodOrb } from '../components/MoodOrb'
+import {
+  ECHO_MOOD_BOUNCE_MS,
+  ECHO_MOOD_IMPACT_MS,
+  stepMoodLevel,
+  type MoodSwipeDirection,
+} from '../components/moodSwipeModel'
+import { useMoodSwipe } from '../lib/useMoodSwipe'
 import { useRotary } from '../lib/useRotary'
 import type { MoodState } from '../types'
 
@@ -19,18 +26,23 @@ const DIAL = 300 // 拨盘直径
 const WORD_R = 136 // 词环半径
 
 interface Props {
+  echoVoid?: boolean
   onNext: (mood: MoodState) => void
   onTimeline: () => void
   entryCount: number
 }
 
-export function Home({ onNext, onTimeline, entryCount }: Props) {
+export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props) {
   const [step, setStep] = useState<'feel' | 'word'>('feel')
 
   /* ---- 第一步：旋转调整整体感受 ---- */
   const [angle, setAngle] = useState(0) // -270..270，每 90° 一档
   const [pulse, setPulse] = useState(false)
   const prevLevel = useRef(0)
+  const transitionRef = useRef(false)
+  const impactTimerRef = useRef<number | null>(null)
+  const bounceTimerRef = useRef<number | null>(null)
+  const [bounceDirection, setBounceDirection] = useState<MoodSwipeDirection | null>(null)
 
   const valence = angle / 90 // 连续值 -3..3
   const level = Math.max(-3, Math.min(3, Math.round(valence)))
@@ -48,6 +60,31 @@ export function Home({ onNext, onTimeline, entryCount }: Props) {
       return next
     })
   })
+
+  const commitMoodSwipe = (direction: MoodSwipeDirection) => {
+    if (transitionRef.current) return
+    transitionRef.current = true
+    setBounceDirection(direction)
+
+    impactTimerRef.current = window.setTimeout(() => {
+      setAngle((current) => stepMoodLevel(Math.round(current / 90), direction) * 90)
+      navigator.vibrate?.(8)
+      setPulse(true)
+    }, ECHO_MOOD_IMPACT_MS)
+
+    bounceTimerRef.current = window.setTimeout(() => {
+      transitionRef.current = false
+      setBounceDirection(null)
+      setPulse(false)
+    }, ECHO_MOOD_BOUNCE_MS)
+  }
+
+  const moodSwipe = useMoodSwipe(commitMoodSwipe, !echoVoid || step !== 'feel')
+
+  useEffect(() => () => {
+    if (impactTimerRef.current !== null) window.clearTimeout(impactTimerRef.current)
+    if (bounceTimerRef.current !== null) window.clearTimeout(bounceTimerRef.current)
+  }, [])
 
   /* ---- 第二步：词环旋转选词 ---- */
   const [ringAngle, setRingAngle] = useState(0)
@@ -86,7 +123,7 @@ export function Home({ onNext, onTimeline, entryCount }: Props) {
     setLabels((prev) => (prev.includes(w) ? prev.filter((x) => x !== w) : prev.length < 3 ? [...prev, w] : prev))
 
   return (
-    <div className="screen screen-scroll">
+    <div className={`screen screen-scroll ${echoVoid ? 'screen--echo-void' : ''}`}>
       <div className="topbar">
         <div className="eyebrow">ECHOES · 回响</div>
         {step === 'feel' ? (
@@ -102,18 +139,26 @@ export function Home({ onNext, onTimeline, entryCount }: Props) {
 
       {step === 'feel' ? (
         <>
-          <div style={{ textAlign: 'center', marginTop: 6 }}>
-            <h1 className="title">此刻，你的心里泛起了什么？</h1>
+          <div className="feel-heading" style={{ textAlign: 'center', marginTop: 6 }}>
+            <h1 className={`title ${echoVoid ? 'echo-feel-title' : ''}`}>此刻，你的心里泛起了什么？</h1>
           </div>
 
           {/* 拨盘 */}
-          <div ref={feelDial} className="dial" style={{ width: DIAL, height: DIAL, marginTop: 26 }}>
+          <div
+            ref={echoVoid ? moodSwipe : feelDial}
+            className={`dial ${echoVoid ? 'echo-feel-dial' : ''}`}
+            data-mood-swipe={echoVoid ? true : undefined}
+            aria-label={echoVoid ? '左右滑动切换此刻的感受' : '旋转选择此刻的感受'}
+            style={{ width: DIAL, height: DIAL, marginTop: 26 }}
+          >
             <div className="dial-ring" />
             <div
               className="dial-dot"
               style={{ transform: `rotate(${angle}deg) translateY(-${DIAL / 2 - 7}px)` }}
             />
             <div
+              className={`echo-orb-bounce ${bounceDirection ? 'is-bouncing' : ''}`}
+              data-orb-bounce={bounceDirection ?? 'idle'}
               style={{
                 position: 'absolute',
                 inset: 0,
@@ -122,22 +167,40 @@ export function Home({ onNext, onTimeline, entryCount }: Props) {
                 pointerEvents: 'none',
               }}
             >
-              <MoodOrb valence={valence} size={188} spin={angle * 1.6} pulse={pulse} />
+              <MoodOrb
+                valence={valence}
+                size={188}
+                spin={angle * 1.6}
+                pulse={pulse}
+                tone={echoVoid ? 'echo' : 'default'}
+              />
             </div>
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: 26, minHeight: 44 }}>
-            <span className="title" style={{ fontSize: 24 }}>
-              {VALENCE_TEXT[level]}
-            </span>
-          </div>
+          {echoVoid ? (
+            <>
+              <div className="echo-mood-label" data-mood-level={level} aria-live="polite">
+                <span aria-hidden="true">‹</span>
+                <span>{VALENCE_TEXT[level]}</span>
+                <span aria-hidden="true">›</span>
+              </div>
+              <div className="dial-hint echo-swipe-hint">左右滑动，切换此刻的感受</div>
+            </>
+          ) : (
+            <>
+              <div style={{ textAlign: 'center', marginTop: 26, minHeight: 44 }}>
+                <span className="title" style={{ fontSize: 24 }}>
+                  {VALENCE_TEXT[level]}
+                </span>
+              </div>
+              <div className="dial-hint" style={{ marginTop: 8, marginBottom: 26 }}>
+                <span className="arc">⟳</span>
+                <span>沿着光环旋转，找到此刻的感受</span>
+              </div>
+            </>
+          )}
 
-          <div className="dial-hint" style={{ marginTop: 8, marginBottom: 26 }}>
-            <span className="arc">⟳</span>
-            <span>沿着光环旋转，找到此刻的感受</span>
-          </div>
-
-          <button className="btn btn-primary" onClick={() => setStep('word')}>
+          <button className={`btn btn-primary ${echoVoid ? 'echo-confirm' : ''}`} onClick={() => setStep('word')}>
             就是这种感觉
           </button>
         </>

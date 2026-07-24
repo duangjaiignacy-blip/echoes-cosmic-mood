@@ -43,8 +43,13 @@ export function MoodOrb({ valence, size = 200, spin = 0, pulse = false, tone = '
   }, [])
 
   useEffect(() => {
-    rendererRef.current?.update({ palette: [main, deep, light], spin, pulse })
-  }, [main, deep, light, spin, pulse])
+    rendererRef.current?.update({
+      palette: [main, deep, light],
+      spin,
+      pulse,
+      silverTone: tone === 'echo',
+    })
+  }, [main, deep, light, spin, pulse, tone])
 
   return (
     <div

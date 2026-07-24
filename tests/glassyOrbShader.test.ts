@@ -4,7 +4,7 @@ import { FRAGMENT_SHADER, VERTEX_SHADER } from '../src/components/glassyOrbShade
 
 test('shader exposes every renderer attribute and uniform', () => {
   assert.match(VERTEX_SHADER, /attribute vec2 aPosition/)
-  for (const uniform of ['uResolution', 'uTime', 'uSpin', 'uPulse', 'uColorMain', 'uColorDeep', 'uColorLight']) {
+  for (const uniform of ['uResolution', 'uTime', 'uSpin', 'uPulse', 'uColorMain', 'uColorDeep', 'uColorLight', 'uSilverTone']) {
     assert.match(FRAGMENT_SHADER, new RegExp(`uniform .* ${uniform};`))
   }
 })
@@ -20,6 +20,11 @@ test('shader remaps emotion colors into a saturated cosmic palette', () => {
   assert.match(FRAGMENT_SHADER, /vec3 cosmicMain/)
   assert.match(FRAGMENT_SHADER, /vec3 cosmicDeep/)
   assert.match(FRAGMENT_SHADER, /vec3 cosmicLight/)
+})
+
+test('shader can blend the orb into a moon-silver graphite palette', () => {
+  assert.match(FRAGMENT_SHADER, /vec3 silverMain/)
+  assert.match(FRAGMENT_SHADER, /mix\(cosmicMain, silverMain, uSilverTone\)/)
 })
 
 test('shader keeps the galactic core compact at mood-orb scale', () => {

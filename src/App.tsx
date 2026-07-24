@@ -80,6 +80,7 @@ export default function App() {
 
       {screen.name === 'home' && (
         <Home
+          echoVoid={BLACK_HOLE_DEMO}
           entryCount={entries.length}
           onTimeline={() => go({ name: 'timeline' })}
           onNext={(mood) => {

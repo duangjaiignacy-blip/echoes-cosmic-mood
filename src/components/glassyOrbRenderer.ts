@@ -11,6 +11,7 @@ export interface OrbRenderInput {
   palette: MoodPalette
   spin: number
   pulse: boolean
+  silverTone: boolean
 }
 
 export interface GlassyOrbRenderer {
@@ -97,6 +98,7 @@ export function createGlassyOrbRenderer(
     main: WebGLUniformLocation
     deep: WebGLUniformLocation
     light: WebGLUniformLocation
+    silverTone: WebGLUniformLocation
   }
 
   try {
@@ -115,6 +117,7 @@ export function createGlassyOrbRenderer(
       main: uniform('uColorMain'),
       deep: uniform('uColorDeep'),
       light: uniform('uColorLight'),
+      silverTone: uniform('uSilverTone'),
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, activeBuffer)
     gl.bufferData(
@@ -137,7 +140,12 @@ export function createGlassyOrbRenderer(
     return null
   }
 
-  let input: OrbRenderInput = { palette: ['#7d7ec0', '#4d4e8e', '#b3b4e8'], spin: 0, pulse: false }
+  let input: OrbRenderInput = {
+    palette: ['#7d7ec0', '#4d4e8e', '#b3b4e8'],
+    spin: 0,
+    pulse: false,
+    silverTone: false,
+  }
   let pulseStarted = -1
   let animationSeconds = 0
   let previousFrame = performance.now()
@@ -188,6 +196,7 @@ export function createGlassyOrbRenderer(
     gl.uniform3fv(uniforms.main, hexToRgb01(input.palette[0]))
     gl.uniform3fv(uniforms.deep, hexToRgb01(input.palette[1]))
     gl.uniform3fv(uniforms.light, hexToRgb01(input.palette[2]))
+    gl.uniform1f(uniforms.silverTone, input.silverTone ? 1 : 0)
     gl.drawArrays(gl.TRIANGLES, 0, 6)
 
     if (!ready) {

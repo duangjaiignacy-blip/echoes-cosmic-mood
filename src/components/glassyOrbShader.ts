@@ -19,6 +19,7 @@ uniform float uPulse;
 uniform vec3 uColorMain;
 uniform vec3 uColorDeep;
 uniform vec3 uColorLight;
+uniform float uSilverTone;
 const float STAR_RADIUS = 0.105;
 
 float hash21(vec2 p) {
@@ -114,6 +115,12 @@ void main() {
   cosmicMain.g *= 0.82;
   vec3 cosmicDeep = uColorDeep * vec3(0.55, 0.32, 0.82);
   vec3 cosmicLight = mix(uColorLight, vec3(1.0, 0.72, 1.0), 0.25);
+  vec3 silverMain = mix(vec3(0.40, 0.42, 0.47), uColorMain, 0.16);
+  vec3 silverDeep = mix(vec3(0.075, 0.085, 0.11), uColorDeep, 0.12);
+  vec3 silverLight = mix(vec3(0.72, 0.75, 0.82), uColorLight, 0.18);
+  cosmicMain = mix(cosmicMain, silverMain, uSilverTone);
+  cosmicDeep = mix(cosmicDeep, silverDeep, uSilverTone);
+  cosmicLight = mix(cosmicLight, silverLight, uSilverTone);
 
   vec3 color = cosmicDeep * (0.10 + density * 0.34);
   color += cosmicMain * density * 0.72;
@@ -124,6 +131,8 @@ void main() {
   float rimAngle = atan(p.y, p.x);
   float fracture = pow(max(0.0, sin(rimAngle * 13.0 + fbm(normal * 5.0) * 8.0)), 18.0);
   vec3 prism = 0.5 + 0.5 * cos(6.2831853 * (vec3(0.02, 0.35, 0.68) + rimAngle * 0.18));
+  vec3 silverPrism = mix(vec3(dot(prism, vec3(0.299, 0.587, 0.114))), vec3(0.70, 0.73, 0.82), 0.32);
+  prism = mix(prism, silverPrism, uSilverTone * 0.92);
   color += prism * fracture * fresnel * 1.15;
 
   vec3 lightDirection = normalize(vec3(-0.48, 0.62, 0.62));
