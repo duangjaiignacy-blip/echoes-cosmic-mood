@@ -27,6 +27,8 @@ uniform float uTwinkleIntensity;
 uniform float uRotationSpeed;
 
 const float VORTEX_CORE_RADIUS = 0.018;
+const float MICRO_DUST_POPULATION = 0.26;
+const float STARFIELD_DENSITY_FLOOR = 0.52;
 
 float hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
@@ -98,16 +100,16 @@ float microStarDust(vec2 uv) {
     uv + vec2(-0.19, 0.27),
     420.0,
     73.6,
-    0.19,
-    vec2(0.18, 0.34)
-  ) * 0.13;
+    MICRO_DUST_POPULATION,
+    vec2(0.20, 0.38)
+  ) * 0.20;
   dust += starLayer(
     uv + vec2(0.37, -0.16),
     332.0,
     91.8,
-    0.15,
-    vec2(0.15, 0.30)
-  ) * 0.17;
+    MICRO_DUST_POPULATION * 0.82,
+    vec2(0.18, 0.34)
+  ) * 0.24;
   return dust;
 }
 
@@ -118,7 +120,7 @@ float layeredStarField(vec2 uv) {
     0.76,
     fbm(rotate2d(-0.34) * uv * 3.15 + vec2(-4.8, 11.2))
   );
-  float densityFloor = 0.42;
+  float densityFloor = STARFIELD_DENSITY_FLOOR;
   float cluster = densityFloor + clusterA * 0.54 + clusterB * 0.31;
 
   float stars = microStarDust(uv) * mix(0.78, 1.22, clusterB);

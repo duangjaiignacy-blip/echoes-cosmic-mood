@@ -38,5 +38,7 @@ test('starfield uses six depth layers with micro dust and irregular density mask
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float microStarDust/)
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float clusterA/)
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float clusterB/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float densityFloor = 0\.42/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /const float MICRO_DUST_POPULATION = 0\.26/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /const float STARFIELD_DENSITY_FLOOR = 0\.52/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float densityFloor = STARFIELD_DENSITY_FLOOR/)
 })
