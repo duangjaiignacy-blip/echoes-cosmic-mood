@@ -1,40 +1,6 @@
-/** 情绪基准色（valence 整数 -3..3 → [主色, 深色, 亮色]） */
-const PALETTES: Record<number, [string, string, string]> = {
-  [-3]: ['#3b4370', '#232849', '#6a7ab0'],
-  [-2]: ['#4a548c', '#2c3158', '#7d8ac0'],
-  [-1]: ['#5f68a8', '#3a4173', '#95a0d6'],
-  [0]: ['#7d7ec0', '#4d4e8e', '#b3b4e8'],
-  [1]: ['#9c8ad0', '#66549e', '#cfc0ee'],
-  [2]: ['#c79ed2', '#8f68a0', '#f0d4ec'],
-  [3]: ['#e8b8c8', '#b57d94', '#ffe3c4'],
-}
+import { moodColorsF } from './moodOrbModel'
 
-function hexToRgb(h: string): [number, number, number] {
-  return [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)]
-}
-
-function mix(a: string, b: string, t: number): string {
-  const ra = hexToRgb(a)
-  const rb = hexToRgb(b)
-  const c = ra.map((v, i) => Math.round(v + (rb[i] - v) * t))
-  return `#${c.map((v) => v.toString(16).padStart(2, '0')).join('')}`
-}
-
-/** 整数档位取色（卡片渲染等场景） */
-export function moodColors(valence: number): [string, string, string] {
-  return PALETTES[Math.max(-3, Math.min(3, Math.round(valence)))]
-}
-
-/** 连续取色：在相邻档位之间插值（拨盘旋转时平滑过渡） */
-export function moodColorsF(valence: number): [string, string, string] {
-  const v = Math.max(-3, Math.min(3, valence))
-  const lo = Math.floor(v)
-  const hi = Math.min(3, lo + 1)
-  const t = v - lo
-  const a = PALETTES[lo]
-  const b = PALETTES[hi]
-  return [mix(a[0], b[0], t), mix(a[1], b[1], t), mix(a[2], b[2], t)]
-}
+export { moodColors } from './moodOrbModel'
 
 interface Props {
   valence: number
