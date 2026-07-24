@@ -18,3 +18,8 @@ export function stepMoodLevel(current: number, direction: MoodSwipeDirection): n
   if (direction === -1 && normalized === -3) return 3
   return normalized + direction
 }
+
+export function stepMoodIndex(current: number, direction: MoodSwipeDirection, count: number): number {
+  if (!Number.isInteger(count) || count < 1) return 0
+  return ((Math.round(current) + direction) % count + count) % count
+}

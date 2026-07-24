@@ -3,9 +3,11 @@ import { MoodOrb } from '../components/MoodOrb'
 import {
   ECHO_MOOD_BOUNCE_MS,
   ECHO_MOOD_IMPACT_MS,
+  stepMoodIndex,
   stepMoodLevel,
   type MoodSwipeDirection,
 } from '../components/moodSwipeModel'
+import { DEFAULT_ECHO_MOOD_INDEX, ECHO_MOODS } from '../components/moodEmotionModel'
 import { useMoodSwipe } from '../lib/useMoodSwipe'
 import { useRotary } from '../lib/useRotary'
 import type { MoodState } from '../types'
@@ -37,6 +39,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
 
   /* ---- 第一步：旋转调整整体感受 ---- */
   const [angle, setAngle] = useState(0) // -270..270，每 90° 一档
+  const [echoMoodIndex, setEchoMoodIndex] = useState(DEFAULT_ECHO_MOOD_INDEX)
   const [pulse, setPulse] = useState(false)
   const prevLevel = useRef(0)
   const transitionRef = useRef(false)
@@ -46,6 +49,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
 
   const valence = angle / 90 // 连续值 -3..3
   const level = Math.max(-3, Math.min(3, Math.round(valence)))
+  const echoMood = ECHO_MOODS[echoMoodIndex]
 
   const feelDial = useRotary((d) => {
     setAngle((a) => {
@@ -67,7 +71,11 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
     setBounceDirection(direction)
 
     impactTimerRef.current = window.setTimeout(() => {
-      setAngle((current) => stepMoodLevel(Math.round(current / 90), direction) * 90)
+      if (echoVoid) {
+        setEchoMoodIndex((current) => stepMoodIndex(current, direction, ECHO_MOODS.length))
+      } else {
+        setAngle((current) => stepMoodLevel(Math.round(current / 90), direction) * 90)
+      }
       navigator.vibrate?.(8)
       setPulse(true)
     }, ECHO_MOOD_IMPACT_MS)
@@ -168,9 +176,9 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
               }}
             >
               <MoodOrb
-                valence={valence}
+                valence={echoVoid ? echoMood.valence : valence}
                 size={188}
-                spin={angle * 1.6}
+                spin={echoVoid ? echoMoodIndex * 24 : angle * 1.6}
                 pulse={pulse}
                 tone={echoVoid ? 'echo' : 'default'}
               />
@@ -179,9 +187,14 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
 
           {echoVoid ? (
             <>
-              <div className="echo-mood-label" data-mood-level={level} aria-live="polite">
+              <div
+                className="echo-mood-label"
+                data-mood-level={echoMood.valence}
+                data-mood-id={echoMood.id}
+                aria-live="polite"
+              >
                 <span aria-hidden="true">‹</span>
-                <span>{VALENCE_TEXT[level]}</span>
+                <span>{echoMood.label}</span>
                 <span aria-hidden="true">›</span>
               </div>
               <div className="dial-hint echo-swipe-hint">左右滑动，切换此刻的感受</div>
@@ -223,7 +236,12 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
                 pointerEvents: 'none',
               }}
             >
-              <MoodOrb valence={valence} size={118} spin={ringAngle * 1.4} />
+              <MoodOrb
+                valence={echoVoid ? echoMood.valence : valence}
+                size={118}
+                spin={ringAngle * 1.4}
+                tone={echoVoid ? 'echo' : 'default'}
+              />
             </div>
             <div className="word-ring">
               {WORDS.map((w, i) => {
@@ -265,7 +283,14 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
             )}
           </div>
 
-          <button className="btn btn-primary" onClick={() => onNext({ valence: level, labels })}>
+          <button
+            className="btn btn-primary"
+            onClick={() => onNext({
+              valence: echoVoid ? echoMood.valence : level,
+              labels,
+              ...(echoVoid ? { emotionId: echoMood.id } : {}),
+            })}
+          >
             继续
           </button>
           <p className="hint" style={{ textAlign: 'center', marginTop: 12 }}>
