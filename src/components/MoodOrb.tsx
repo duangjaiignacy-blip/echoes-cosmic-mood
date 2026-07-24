@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createGlassyOrbRenderer, type GlassyOrbRenderer } from './glassyOrbRenderer'
-import { moodColorsF } from './moodOrbModel'
+import { echoMoodColorsF, moodColorsF } from './moodOrbModel'
 
 export { moodColors } from './moodOrbModel'
 
@@ -11,16 +11,18 @@ interface Props {
   spin?: number
   /** 选中档位时的脉冲动画 */
   pulse?: boolean
+  /** 独立回响深空 Demo 使用低饱和月银配色。 */
+  tone?: 'default' | 'echo'
 }
 
 type RendererStatus = 'pending' | 'webgl' | 'fallback'
 
 /** WebGL 宇宙玻璃情绪球，不可用时自动回退到 CSS 晶体球。 */
-export function MoodOrb({ valence, size = 200, spin = 0, pulse = false }: Props) {
+export function MoodOrb({ valence, size = 200, spin = 0, pulse = false, tone = 'default' }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rendererRef = useRef<GlassyOrbRenderer | null>(null)
   const [rendererStatus, setRendererStatus] = useState<RendererStatus>('pending')
-  const palette = moodColorsF(valence)
+  const palette = tone === 'echo' ? echoMoodColorsF(valence) : moodColorsF(valence)
   const [main, deep, light] = palette
 
   useEffect(() => {

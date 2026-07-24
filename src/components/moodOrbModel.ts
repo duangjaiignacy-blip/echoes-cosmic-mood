@@ -10,6 +10,16 @@ const PALETTES: Record<number, MoodPalette> = {
   [3]: ['#e8b8c8', '#b57d94', '#ffe3c4'],
 }
 
+const ECHO_PALETTES: Record<number, MoodPalette> = {
+  [-3]: ['#555e70', '#1b2029', '#aeb8ca'],
+  [-2]: ['#626a78', '#20252e', '#b8c0ce'],
+  [-1]: ['#6b7180', '#242932', '#c0c6d1'],
+  [0]: ['#737786', '#272b34', '#c6cad4'],
+  [1]: ['#7f7982', '#2f2d34', '#d0c6cc'],
+  [2]: ['#8d7f87', '#383039', '#dacbd1'],
+  [3]: ['#9b858a', '#41343c', '#e2d0d3'],
+}
+
 function hexToRgb255(hex: string): [number, number, number] {
   return [
     Number.parseInt(hex.slice(1, 3), 16),
@@ -35,6 +45,16 @@ export function moodColorsF(valence: number): MoodPalette {
   const upper = Math.min(3, lower + 1)
   const amount = clamped - lower
   return PALETTES[lower].map((color, index) => mixHex(color, PALETTES[upper][index], amount)) as MoodPalette
+}
+
+export function echoMoodColorsF(valence: number): MoodPalette {
+  const clamped = Math.max(-3, Math.min(3, valence))
+  const lower = Math.floor(clamped)
+  const upper = Math.min(3, lower + 1)
+  const amount = clamped - lower
+  return ECHO_PALETTES[lower].map(
+    (color, index) => mixHex(color, ECHO_PALETTES[upper][index], amount),
+  ) as MoodPalette
 }
 
 export function hexToRgb01(hex: string): [number, number, number] {

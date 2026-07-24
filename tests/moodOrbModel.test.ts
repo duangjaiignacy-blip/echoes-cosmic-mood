@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   capRenderDpr,
+  echoMoodColorsF,
   hexToRgb01,
   moodColors,
   moodColorsF,
@@ -17,6 +18,11 @@ test('moodColors clamps and rounds integer emotion levels', () => {
 
 test('moodColorsF interpolates continuously between adjacent levels', () => {
   assert.deepEqual(moodColorsF(0.5), ['#8d84c8', '#5a5196', '#c1baeb'])
+})
+
+test('echoMoodColorsF keeps every mood inside the moon-silver violet-gray family', () => {
+  assert.deepEqual(echoMoodColorsF(0), ['#737786', '#272b34', '#c6cad4'])
+  assert.deepEqual(echoMoodColorsF(0.5), ['#797884', '#2b2c34', '#cbc8d0'])
 })
 
 test('hexToRgb01 produces normalized WebGL color channels', () => {
