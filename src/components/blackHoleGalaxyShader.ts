@@ -90,14 +90,14 @@ float eventHorizon(vec2 point, float radius) {
 }
 
 float accretionDisk(vec2 point, float radius) {
-  vec2 disk = rotate2d(-0.314159 - uTime * uRotationSpeed * 0.12) * point;
+  vec2 disk = rotate2d(-0.314159) * point;
   vec2 elliptical = vec2(disk.x, disk.y / 0.34);
   float r = length(elliptical);
   float angle = atan(elliptical.y, elliptical.x);
   float inner = radius * 1.12;
   float outer = radius * 5.2;
   float mask = smoothstep(inner, inner + 0.035, r) * (1.0 - smoothstep(outer * 0.72, outer, r));
-  float flow = angle * (5.0 + uDensity * 2.35) + r * (90.0 + uDensity * 26.0) - uTime * uSpeed * 2.2;
+  float flow = angle * (5.0 + uDensity * 2.35) + r * (90.0 + uDensity * 26.0) - uTime * uSpeed * 2.2 - uTime * uRotationSpeed * 6.0;
   float strands = pow(0.5 + 0.5 * sin(flow + fbm(elliptical * 7.0) * 9.0), 9.0);
   float hotRing = exp(-abs(r - radius * 1.5) * 28.0);
   float front = mix(0.55, 1.0, 1.0 - smoothstep(-0.16, 0.18, disk.y));
