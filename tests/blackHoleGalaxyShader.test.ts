@@ -26,8 +26,17 @@ test('pointer repulsion affects stars without moving the vortex center', () => {
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /tinyVortex\(uv - vortexCenter/)
 })
 
-test('deep space adds a dim fourth star layer and dust-softened vortex trails', () => {
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /starLayer\(uv \+ vec2\(-0\.19, 0\.27\), 318\.0, 73\.6\)/)
+test('vortex trails stay dust-softened', () => {
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float spiralDust/)
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /spiralDust\(vortexPoint\)/)
+})
+
+test('starfield uses six depth layers with micro dust and irregular density masks', () => {
+  const layerCalls = (BLACK_HOLE_FRAGMENT_SHADER.match(/starLayer\(/g) ?? []).length - 1
+
+  assert.equal(layerCalls, 6)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float microStarDust/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float clusterA/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float clusterB/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float densityFloor = 0\.42/)
 })

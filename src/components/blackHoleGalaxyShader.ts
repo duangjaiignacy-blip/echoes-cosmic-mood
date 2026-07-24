@@ -73,27 +73,59 @@ vec2 repelPointer(vec2 uv, vec2 pointer) {
   return uv + normalize(delta) * influence * uRepulsionStrength * 0.035;
 }
 
-float starLayer(vec2 uv, float scale, float layerSeed) {
+float starLayer(
+  vec2 uv,
+  float scale,
+  float layerSeed,
+  float population,
+  vec2 radiusRange
+) {
   vec2 grid = uv * scale + layerSeed;
   vec2 cell = floor(grid);
   vec2 local = fract(grid) - 0.5;
   float seed = hash21(cell + layerSeed);
   vec2 offset = vec2(seed, hash21(cell + 7.31)) - 0.5;
-  float distanceToStar = length(local - offset * 0.65);
-  float radius = mix(0.035, 0.085, seed);
-  float star = 1.0 - smoothstep(0.0, radius, distanceToStar);
-  float threshold = 1.0 - 0.043 * uDensity;
-  float twinkle = 1.0 + sin(uTime * (1.5 + seed * 3.0) + seed * 40.0) * uTwinkleIntensity;
+  float distanceToStar = length(local - offset * 0.58);
+  float radius = mix(radiusRange.x, radiusRange.y, seed);
+  float star = 1.0 - smoothstep(radius * 0.34, radius, distanceToStar);
+  float threshold = 1.0 - clamp(population * uDensity, 0.0, 0.62);
+  float twinkle = 1.0 + sin(uTime * (1.15 + seed * 2.6) + seed * 40.0) * uTwinkleIntensity;
   return star * step(threshold, seed) * twinkle;
 }
 
+float microStarDust(vec2 uv) {
+  float dust = starLayer(
+    uv + vec2(-0.19, 0.27),
+    420.0,
+    73.6,
+    0.19,
+    vec2(0.18, 0.34)
+  ) * 0.13;
+  dust += starLayer(
+    uv + vec2(0.37, -0.16),
+    332.0,
+    91.8,
+    0.15,
+    vec2(0.15, 0.30)
+  ) * 0.17;
+  return dust;
+}
+
 float layeredStarField(vec2 uv) {
-  float quietRegions = smoothstep(0.24, 0.78, fbm(uv * 2.15 + vec2(8.4, -3.7)));
-  float cluster = 0.20 + quietRegions * 1.04;
-  float stars = starLayer(uv, 66.0, 2.7);
-  stars += starLayer(uv + vec2(0.13, -0.21), 132.0, 19.4) * 0.68;
-  stars += starLayer(uv - vec2(0.31, 0.07), 224.0, 41.2) * 0.34;
-  stars += starLayer(uv + vec2(-0.19, 0.27), 318.0, 73.6) * 0.22;
+  float clusterA = smoothstep(0.28, 0.74, fbm(uv * 1.72 + vec2(8.4, -3.7)));
+  float clusterB = smoothstep(
+    0.40,
+    0.76,
+    fbm(rotate2d(-0.34) * uv * 3.15 + vec2(-4.8, 11.2))
+  );
+  float densityFloor = 0.42;
+  float cluster = densityFloor + clusterA * 0.54 + clusterB * 0.31;
+
+  float stars = microStarDust(uv) * mix(0.78, 1.22, clusterB);
+  stars += starLayer(uv, 214.0, 41.2, 0.105, vec2(0.13, 0.27)) * 0.25;
+  stars += starLayer(uv + vec2(0.13, -0.21), 132.0, 19.4, 0.075, vec2(0.10, 0.23)) * 0.42;
+  stars += starLayer(uv - vec2(0.31, 0.07), 72.0, 7.7, 0.038, vec2(0.07, 0.18)) * 0.72;
+  stars += starLayer(uv + vec2(0.08, 0.11), 34.0, 2.7, 0.010, vec2(0.045, 0.12)) * 1.24;
   return stars * cluster;
 }
 
