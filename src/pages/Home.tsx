@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { MoodOrb } from '../components/MoodOrb'
 import {
   ECHO_MOOD_BOUNCE_MS,
@@ -89,6 +89,17 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
 
   const moodSwipe = useMoodSwipe(commitMoodSwipe, !echoVoid || step !== 'feel')
 
+  const handleMoodKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!echoVoid || step !== 'feel') return
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault()
+      commitMoodSwipe(1)
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault()
+      commitMoodSwipe(-1)
+    }
+  }
+
   useEffect(() => () => {
     if (impactTimerRef.current !== null) window.clearTimeout(impactTimerRef.current)
     if (bounceTimerRef.current !== null) window.clearTimeout(bounceTimerRef.current)
@@ -157,6 +168,13 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
             className={`dial ${echoVoid ? 'echo-feel-dial' : ''}`}
             data-mood-swipe={echoVoid ? true : undefined}
             aria-label={echoVoid ? '左右滑动切换此刻的感受' : '旋转选择此刻的感受'}
+            role={echoVoid ? 'slider' : undefined}
+            tabIndex={echoVoid ? 0 : undefined}
+            aria-valuemin={echoVoid ? 1 : undefined}
+            aria-valuemax={echoVoid ? ECHO_MOODS.length : undefined}
+            aria-valuenow={echoVoid ? echoMoodIndex + 1 : undefined}
+            aria-valuetext={echoVoid ? echoMood.label : undefined}
+            onKeyDown={handleMoodKeyDown}
             style={{ width: DIAL, height: DIAL, marginTop: 26 }}
           >
             <div className="dial-ring" />

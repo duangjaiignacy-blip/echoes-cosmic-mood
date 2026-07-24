@@ -85,6 +85,23 @@ test('every expression signature is unique and every stroke has path data', () =
   assert.equal(signatures.size, ECHO_MOODS.length)
 })
 
+test('every mood has bounded internal nebula dynamics with meaningful variation', () => {
+  const signatures = new Set<string>()
+
+  for (const mood of ECHO_MOODS) {
+    const { flow, starDensity, lightY, turbulence, pulse } = mood.dynamics
+    assert.equal(flow.length, 2, `${mood.id} flow`)
+    assert.ok(flow.every((value) => value >= -1 && value <= 1), `${mood.id} flow bounds`)
+    assert.ok(starDensity >= 0.55 && starDensity <= 1.45, `${mood.id} star density`)
+    assert.ok(lightY >= -0.35 && lightY <= 0.35, `${mood.id} light bias`)
+    assert.ok(turbulence >= 0 && turbulence <= 1, `${mood.id} turbulence`)
+    assert.ok(pulse >= 0 && pulse <= 1, `${mood.id} pulse`)
+    signatures.add(JSON.stringify(mood.dynamics))
+  }
+
+  assert.ok(signatures.size >= 10)
+})
+
 test('default and lookup helpers return the registry records themselves', () => {
   assert.equal(ECHO_MOODS[DEFAULT_ECHO_MOOD_INDEX]?.id, 'calm')
 

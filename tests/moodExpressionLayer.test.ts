@@ -13,7 +13,9 @@ test('expression overlay keeps the sphere geometry separate from its safe outer 
   assert.match(component, /name="face"/)
   assert.match(component, /name="hands"/)
   assert.match(component, /name="accents"/)
+  assert.match(component, /mood-expression--exit/)
   assert.match(orb, /<MoodExpression/)
+  assert.match(orb, /leavingMood/)
 })
 
 test('expression styling is crisp, pointer inert, motion-safe, and never elliptically squashes the orb', () => {

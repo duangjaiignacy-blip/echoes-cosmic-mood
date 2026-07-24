@@ -12,11 +12,37 @@ export interface OrbRenderInput {
   spin: number
   pulse: boolean
   silverTone: boolean
+  dynamics?: OrbDynamics
+}
+
+export interface OrbDynamics {
+  flow: [number, number]
+  starDensity: number
+  lightY: number
+  turbulence: number
+  pulse: number
 }
 
 export interface GlassyOrbRenderer {
   update(input: OrbRenderInput): void
   destroy(): void
+}
+
+const DEFAULT_DYNAMICS: OrbDynamics = {
+  flow: [0.1, 0],
+  starDensity: 1,
+  lightY: 0,
+  turbulence: 0.12,
+  pulse: 0.08,
+}
+
+export function settleFactor(deltaMs: number, durationMs = 700): number {
+  if (durationMs <= 0) return 1
+  return 1 - Math.exp(-Math.max(0, deltaMs) / durationMs)
+}
+
+function mixNumber(current: number, target: number, amount: number): number {
+  return current + (target - current) * amount
 }
 
 export function resizeDrawingBuffer(canvas: HTMLCanvasElement, dpr: number): boolean {
@@ -99,6 +125,11 @@ export function createGlassyOrbRenderer(
     deep: WebGLUniformLocation
     light: WebGLUniformLocation
     silverTone: WebGLUniformLocation
+    nebulaFlow: WebGLUniformLocation
+    starDensity: WebGLUniformLocation
+    lightBias: WebGLUniformLocation
+    turbulence: WebGLUniformLocation
+    moodPulse: WebGLUniformLocation
   }
 
   try {
@@ -118,6 +149,11 @@ export function createGlassyOrbRenderer(
       deep: uniform('uColorDeep'),
       light: uniform('uColorLight'),
       silverTone: uniform('uSilverTone'),
+      nebulaFlow: uniform('uNebulaFlow'),
+      starDensity: uniform('uStarDensity'),
+      lightBias: uniform('uLightBias'),
+      turbulence: uniform('uTurbulence'),
+      moodPulse: uniform('uMoodPulse'),
     }
     gl.bindBuffer(gl.ARRAY_BUFFER, activeBuffer)
     gl.bufferData(
@@ -145,7 +181,12 @@ export function createGlassyOrbRenderer(
     spin: 0,
     pulse: false,
     silverTone: false,
+    dynamics: DEFAULT_DYNAMICS,
   }
+  let displayedPalette = input.palette.map(hexToRgb01)
+  let displayedSpin = 0
+  let displayedSilverTone = 0
+  let displayedDynamics: OrbDynamics = { ...DEFAULT_DYNAMICS, flow: [...DEFAULT_DYNAMICS.flow] }
   let pulseStarted = -1
   let animationSeconds = 0
   let previousFrame = performance.now()
@@ -181,22 +222,47 @@ export function createGlassyOrbRenderer(
 
   const render = (now: number) => {
     if (destroyed) return
-    const deltaSeconds = Math.min(0.05, Math.max(0, now - previousFrame) / 1000)
+    const deltaMs = Math.min(50, Math.max(0, now - previousFrame))
+    const deltaSeconds = deltaMs / 1000
     previousFrame = now
     if (!reducedMotion.matches) animationSeconds += deltaSeconds
     resizeDrawingBuffer(canvas, window.devicePixelRatio)
+
+    const settle = settleFactor(deltaMs)
+    const targetPalette = input.palette.map(hexToRgb01)
+    displayedPalette = displayedPalette.map((color, colorIndex) => color.map(
+      (channel, channelIndex) => mixNumber(channel, targetPalette[colorIndex][channelIndex], settle),
+    ) as [number, number, number])
+    displayedSpin = mixNumber(displayedSpin, spinDegreesToRadians(input.spin), settle)
+    displayedSilverTone = mixNumber(displayedSilverTone, input.silverTone ? 1 : 0, settle)
+    const targetDynamics = input.dynamics ?? DEFAULT_DYNAMICS
+    displayedDynamics = {
+      flow: [
+        mixNumber(displayedDynamics.flow[0], targetDynamics.flow[0], settle),
+        mixNumber(displayedDynamics.flow[1], targetDynamics.flow[1], settle),
+      ],
+      starDensity: mixNumber(displayedDynamics.starDensity, targetDynamics.starDensity, settle),
+      lightY: mixNumber(displayedDynamics.lightY, targetDynamics.lightY, settle),
+      turbulence: mixNumber(displayedDynamics.turbulence, targetDynamics.turbulence, settle),
+      pulse: mixNumber(displayedDynamics.pulse, targetDynamics.pulse, settle),
+    }
 
     gl.viewport(0, 0, canvas.width, canvas.height)
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.useProgram(activeProgram)
     gl.uniform2f(uniforms.resolution, canvas.width, canvas.height)
     gl.uniform1f(uniforms.time, animationSeconds)
-    gl.uniform1f(uniforms.spin, spinDegreesToRadians(input.spin))
+    gl.uniform1f(uniforms.spin, displayedSpin)
     gl.uniform1f(uniforms.pulse, pulseStarted < 0 ? 0 : pulseStrength(now - pulseStarted))
-    gl.uniform3fv(uniforms.main, hexToRgb01(input.palette[0]))
-    gl.uniform3fv(uniforms.deep, hexToRgb01(input.palette[1]))
-    gl.uniform3fv(uniforms.light, hexToRgb01(input.palette[2]))
-    gl.uniform1f(uniforms.silverTone, input.silverTone ? 1 : 0)
+    gl.uniform3fv(uniforms.main, displayedPalette[0])
+    gl.uniform3fv(uniforms.deep, displayedPalette[1])
+    gl.uniform3fv(uniforms.light, displayedPalette[2])
+    gl.uniform1f(uniforms.silverTone, displayedSilverTone)
+    gl.uniform2f(uniforms.nebulaFlow, displayedDynamics.flow[0], displayedDynamics.flow[1])
+    gl.uniform1f(uniforms.starDensity, displayedDynamics.starDensity)
+    gl.uniform1f(uniforms.lightBias, displayedDynamics.lightY)
+    gl.uniform1f(uniforms.turbulence, displayedDynamics.turbulence)
+    gl.uniform1f(uniforms.moodPulse, displayedDynamics.pulse)
     gl.drawArrays(gl.TRIANGLES, 0, 6)
 
     if (!ready) {

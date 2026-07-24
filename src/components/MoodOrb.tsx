@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createGlassyOrbRenderer, type GlassyOrbRenderer } from './glassyOrbRenderer'
 import { MoodExpression } from './MoodExpression'
-import { getMoodVisual } from './moodEmotionModel'
+import { getMoodVisual, type MoodVisual } from './moodEmotionModel'
 import { echoMoodColorsF, moodColorsF } from './moodOrbModel'
 import type { MoodId } from '../types'
 
@@ -34,11 +34,22 @@ export function MoodOrb({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const rendererRef = useRef<GlassyOrbRenderer | null>(null)
   const [rendererStatus, setRendererStatus] = useState<RendererStatus>('pending')
+  const [leavingMood, setLeavingMood] = useState<MoodVisual>()
+  const previousMoodRef = useRef<MoodVisual | undefined>(undefined)
   const mood = emotionId ? getMoodVisual(emotionId) : undefined
   const palette = mood?.palette ?? (tone === 'echo' ? echoMoodColorsF(valence) : moodColorsF(valence))
   const [main, deep, light] = palette
   const effectiveSpin = spin + (mood?.spinOffset ?? 0)
   const silverTone = tone === 'echo' && !mood
+
+  useEffect(() => {
+    const previous = previousMoodRef.current
+    previousMoodRef.current = mood
+    if (!previous || !mood || previous.id === mood.id) return
+    setLeavingMood(previous)
+    const timer = window.setTimeout(() => setLeavingMood(undefined), 520)
+    return () => window.clearTimeout(timer)
+  }, [mood])
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -63,8 +74,9 @@ export function MoodOrb({
       spin: effectiveSpin,
       pulse,
       silverTone,
+      dynamics: mood?.dynamics,
     })
-  }, [main, deep, light, effectiveSpin, pulse, silverTone])
+  }, [main, deep, light, effectiveSpin, pulse, silverTone, mood])
 
   return (
     <div
@@ -115,7 +127,8 @@ export function MoodOrb({
         </div>
       </div>
 
-      {mood && <MoodExpression key={mood.id} mood={mood} />}
+      {leavingMood && <MoodExpression key={`leaving-${leavingMood.id}`} mood={leavingMood} phase="exit" />}
+      {mood && <MoodExpression key={mood.id} mood={mood} phase="enter" />}
 
       <div className="corb-caustic" style={{ background: `radial-gradient(ellipse, ${main}55, transparent 65%)` }} />
     </div>

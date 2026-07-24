@@ -23,6 +23,14 @@ export interface MoodStroke {
   fill?: boolean
 }
 
+export interface MoodDynamics {
+  flow: [number, number]
+  starDensity: number
+  lightY: number
+  turbulence: number
+  pulse: number
+}
+
 export interface MoodVisual {
   id: MoodId
   label: string
@@ -33,6 +41,7 @@ export interface MoodVisual {
   accent: string
   motion: MoodMotion
   spinOffset: number
+  dynamics: MoodDynamics
   eyes: MoodStroke[]
   brows: MoodStroke[]
   mouth: MoodStroke[]
@@ -51,6 +60,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#66799f',
     motion: 'sink',
     spinOffset: -4,
+    dynamics: { flow: [0, -0.65], starDensity: 0.6, lightY: -0.28, turbulence: 0.2, pulse: 0.05 },
     eyes: [
       { d: 'M76 98 C81 101 87 100 91 96', layer: 'face' },
       { d: 'M109 97 C114 100 121 101 125 96', layer: 'face' },
@@ -83,6 +93,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#8790af',
     motion: 'settle',
     spinOffset: -3,
+    dynamics: { flow: [0, -0.4], starDensity: 0.75, lightY: -0.18, turbulence: 0.25, pulse: 0.08 },
     eyes: [
       { d: 'M76 94 Q83 101 91 99', layer: 'face' },
       { d: 'M109 99 Q117 101 125 94', layer: 'face' },
@@ -112,6 +123,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#9395a8',
     motion: 'settle',
     spinOffset: -2,
+    dynamics: { flow: [0.05, -0.25], starDensity: 0.85, lightY: -0.12, turbulence: 0.2, pulse: 0.07 },
     eyes: [
       { d: 'M75 91 Q83 87 92 92 M78 96 Q85 99 91 96', layer: 'face' },
       { d: 'M108 92 Q117 87 126 91 M109 96 Q116 99 123 96', layer: 'face' },
@@ -141,6 +153,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#aeb7d2',
     motion: 'breathe',
     spinOffset: 0,
+    dynamics: { flow: [0.1, 0], starDensity: 1, lightY: 0, turbulence: 0.08, pulse: 0.1 },
     eyes: [
       { d: 'M76 94 Q83 100 91 94', layer: 'face' },
       { d: 'M109 95 Q117 101 125 93', layer: 'face' },
@@ -169,6 +182,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#c4afcf',
     motion: 'lift',
     spinOffset: 1,
+    dynamics: { flow: [0.15, 0.25], starDensity: 1.08, lightY: 0.08, turbulence: 0.12, pulse: 0.18 },
     eyes: [
       { d: 'M76 92 C76 85 81 82 86 83 C91 84 93 90 91 96 C89 101 80 101 77 96 C76 95 76 94 76 92', layer: 'face' },
       { d: 'M109 92 C109 85 114 82 120 83 C126 85 127 91 124 97 C121 101 113 100 110 96 C109 95 109 94 109 92', layer: 'face' },
@@ -200,6 +214,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#e7cc8e',
     motion: 'glow',
     spinOffset: 2,
+    dynamics: { flow: [0.1, 0.45], starDensity: 1.25, lightY: 0.18, turbulence: 0.15, pulse: 0.3 },
     eyes: [
       { d: 'M75 95 Q83 84 92 95', layer: 'face' },
       { d: 'M108 95 Q117 83 126 94', layer: 'face' },
@@ -232,6 +247,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#f0b48f',
     motion: 'spark',
     spinOffset: 4,
+    dynamics: { flow: [0.28, 0.55], starDensity: 1.35, lightY: 0.22, turbulence: 0.3, pulse: 0.45 },
     eyes: [
       { d: 'M73 94 Q83 82 94 94', layer: 'face' },
       { d: 'M106 94 Q117 81 128 93', layer: 'face' },
@@ -264,6 +280,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#928da3',
     motion: 'withdraw',
     spinOffset: -1,
+    dynamics: { flow: [-0.15, -0.05], starDensity: 0.55, lightY: -0.08, turbulence: 0.08, pulse: 0.05 },
     eyes: [
       { d: 'M79 103 C80 96 85 94 90 97 C94 100 93 108 89 111 C84 113 79 109 79 103', layer: 'face' },
       { d: 'M108 103 C109 96 114 94 119 97 C123 101 122 108 118 111 C113 113 108 109 108 103', layer: 'face' },
@@ -297,6 +314,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#91acd0',
     motion: 'rain',
     spinOffset: -2,
+    dynamics: { flow: [0, -0.5], starDensity: 0.75, lightY: -0.2, turbulence: 0.35, pulse: 0.12 },
     eyes: [
       { d: 'M75 91 Q83 86 92 93 Q84 101 76 97', layer: 'face' },
       { d: 'M108 93 Q117 86 126 91 Q125 99 116 101', layer: 'face' },
@@ -329,6 +347,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#e28a5b',
     motion: 'bristle',
     spinOffset: 3,
+    dynamics: { flow: [0.55, 0.05], starDensity: 1.15, lightY: 0, turbulence: 1, pulse: 0.5 },
     eyes: [
       { d: 'M75 91 L91 96 Q84 101 76 97', layer: 'face' },
       { d: 'M109 96 L126 91 Q125 98 117 101', layer: 'face' },
@@ -359,6 +378,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#d5b66c',
     motion: 'shiver',
     spinOffset: -5,
+    dynamics: { flow: [0, 0], starDensity: 0.7, lightY: 0, turbulence: 0.65, pulse: 0.55 },
     eyes: [
       { d: 'M73 91 C73 79 81 75 89 80 C96 86 93 100 84 103 C77 103 73 98 73 91', layer: 'face' },
       { d: 'M108 90 C108 80 115 76 123 80 C130 85 128 99 120 102 C112 102 108 97 108 90', layer: 'face' },
@@ -391,6 +411,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#83a7b4',
     motion: 'fade',
     spinOffset: -3,
+    dynamics: { flow: [0.1, -0.3], starDensity: 0.65, lightY: -0.18, turbulence: 0.3, pulse: 0.06 },
     eyes: [
       { d: 'M75 94 Q83 86 92 95', layer: 'face' },
       { d: 'M108 95 Q117 86 126 94', layer: 'face' },
@@ -421,6 +442,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#91afa4',
     motion: 'orbit',
     spinOffset: 5,
+    dynamics: { flow: [0.45, 0.15], starDensity: 0.95, lightY: 0, turbulence: 0.75, pulse: 0.35 },
     eyes: [
       { d: 'M76 94 Q84 86 92 94', layer: 'face' },
       { d: 'M109 92 Q118 84 127 92', layer: 'face' },
@@ -453,6 +475,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#b3b4d5',
     motion: 'hold',
     spinOffset: -1,
+    dynamics: { flow: [0, -0.1], starDensity: 0.9, lightY: 0.02, turbulence: 0.2, pulse: 0.15 },
     eyes: [
       { d: 'M74 84 C79 75 90 75 95 84 C99 94 94 104 85 106 C76 106 70 95 74 84 Z', layer: 'face', fill: true },
       { d: 'M108 84 C113 75 124 75 129 84 C133 94 128 104 119 106 C110 106 104 95 108 84 Z', layer: 'face', fill: true },
@@ -486,6 +509,7 @@ export const ECHO_MOODS: readonly MoodVisual[] = [
     accent: '#c690ba',
     motion: 'wobble',
     spinOffset: 4,
+    dynamics: { flow: [0.35, 0], starDensity: 1.05, lightY: 0.03, turbulence: 0.35, pulse: 0.22 },
     eyes: [
       { d: 'M73 92 Q82 98 92 90', layer: 'face' },
       { d: 'M108 90 Q117 96 127 88', layer: 'face' },

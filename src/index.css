@@ -460,7 +460,15 @@ body {
   height: 124%;
   overflow: visible;
   pointer-events: none;
+}
+
+.mood-expression--enter {
   animation: mood-expression-arrive 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mood-expression--exit {
+  z-index: 3;
+  animation: mood-expression-leave 520ms ease-in both;
 }
 
 .mood-stroke {
@@ -508,31 +516,34 @@ body {
 }
 
 .mood-expression--sink .mood-expression__accents { animation: mood-marks-fall 6.8s ease-in-out infinite; }
-.mood-expression--settle .mood-expression__face { animation: mood-settle 7.2s ease-in-out infinite; }
-.mood-expression--breathe .mood-expression__face { animation: mood-breathe 6.4s ease-in-out infinite; }
+.mood-expression--settle .mood-expression__accents { animation: mood-settle 7.2s ease-in-out infinite; }
 .mood-expression--breathe .mood-expression__accents { animation: mood-halo-breathe 6.4s ease-in-out infinite; }
 .mood-expression--lift .mood-expression__hands { animation: mood-wave 5.6s ease-in-out infinite; transform-origin: 70% 70%; }
 .mood-expression--glow .mood-expression__accents { animation: mood-sparkle 5.2s ease-in-out infinite; }
 .mood-expression--spark .mood-expression__hands { animation: mood-hands-rise 4.8s ease-in-out infinite; }
 .mood-expression--spark .mood-expression__accents { animation: mood-sparkle 4.8s ease-in-out infinite; }
-.mood-expression--withdraw .mood-expression__face { animation: mood-withdraw 7.6s ease-in-out infinite; }
+.mood-expression--withdraw .mood-expression__accents { animation: mood-withdraw 7.6s ease-in-out infinite; }
 .mood-expression--withdraw .mood-expression__hands { animation: mood-hold 7.6s ease-in-out infinite; }
 .mood-expression--rain .mood-expression__accents { animation: mood-marks-fall 5.8s linear infinite; }
 .mood-expression--bristle .mood-expression__hands { animation: mood-bristle 4.4s ease-in-out infinite; }
 .mood-expression--bristle .mood-expression__accents { animation: mood-sparkle 4.4s ease-in-out infinite; }
-.mood-expression--shiver .mood-expression__face,
-.mood-expression--shiver .mood-expression__hands { animation: mood-shiver 4.2s ease-in-out infinite; }
+.mood-expression--shiver .mood-expression__hands,
+.mood-expression--shiver .mood-expression__accents { animation: mood-shiver 4.2s ease-in-out infinite; }
 .mood-expression--fade .mood-expression__accents { animation: mood-fade 7.8s ease-in-out infinite; }
 .mood-expression--orbit .mood-expression__accents { animation: mood-orbit 6.2s ease-in-out infinite; }
 .mood-expression--hold .mood-expression__hands { animation: mood-hold 7.4s ease-in-out infinite; }
-.mood-expression--hold .mood-expression__face { animation: mood-tear-hold 7.4s ease-in-out infinite; }
-.mood-expression--wobble .mood-expression__face,
+.mood-expression--hold .mood-expression__accents { animation: mood-tear-hold 7.4s ease-in-out infinite; }
 .mood-expression--wobble .mood-expression__hands { animation: mood-wobble 5.8s ease-in-out infinite; }
 .mood-expression--wobble .mood-expression__accents { animation: mood-orbit 5.8s ease-in-out infinite; }
 
 @keyframes mood-expression-arrive {
   from { opacity: 0; filter: blur(2px); transform: scale(0.96); }
   to { opacity: 1; filter: none; transform: scale(1); }
+}
+
+@keyframes mood-expression-leave {
+  from { opacity: 1; filter: none; transform: scale(1); }
+  to { opacity: 0; filter: blur(1px); transform: scale(1.018); }
 }
 
 @keyframes mood-marks-fall {
@@ -626,8 +637,12 @@ body {
     transition: none;
   }
 
-  .mood-expression {
+  .mood-expression--enter {
     animation: mood-expression-fade 160ms linear both;
+  }
+
+  .mood-expression--exit {
+    animation: mood-expression-fade-out 160ms linear both;
   }
 
   .mood-expression__face,
@@ -640,6 +655,11 @@ body {
 @keyframes mood-expression-fade {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+@keyframes mood-expression-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 
 /* ---------- 拨盘 ---------- */

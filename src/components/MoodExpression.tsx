@@ -23,7 +23,7 @@ function StrokeGroup({ name, strokes }: { name: string; strokes: readonly MoodSt
 }
 
 /** Decorative hand-drawn expression layer; the glass sphere remains a separate perfect circle. */
-export function MoodExpression({ mood }: { mood: MoodVisual }) {
+export function MoodExpression({ mood, phase = 'enter' }: { mood: MoodVisual; phase?: 'enter' | 'exit' }) {
   const style: MoodExpressionStyle = {
     '--mood-ink': mood.ink,
     '--mood-blush': mood.blush,
@@ -31,10 +31,11 @@ export function MoodExpression({ mood }: { mood: MoodVisual }) {
   }
   const blush = mood.accents.filter(({ layer }) => layer === 'blush')
   const accents = mood.accents.filter(({ layer }) => layer !== 'blush')
+  const phaseClass = phase === 'exit' ? 'mood-expression--exit' : 'mood-expression--enter'
 
   return (
     <svg
-      className={`mood-expression mood-expression--${mood.motion}`}
+      className={`mood-expression ${phaseClass} mood-expression--${mood.motion}`}
       viewBox="-24 -24 248 248"
       aria-hidden="true"
       style={style}

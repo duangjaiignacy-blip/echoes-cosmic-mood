@@ -20,6 +20,11 @@ uniform vec3 uColorMain;
 uniform vec3 uColorDeep;
 uniform vec3 uColorLight;
 uniform float uSilverTone;
+uniform vec2 uNebulaFlow;
+uniform float uStarDensity;
+uniform float uLightBias;
+uniform float uTurbulence;
+uniform float uMoodPulse;
 const float STAR_RADIUS = 0.105;
 
 float hash21(vec2 p) {
@@ -65,8 +70,9 @@ float fbm(vec3 p) {
 }
 
 float nebulaDensity(vec3 point) {
-  float cloud = fbm(point * 2.15 + vec3(uTime * 0.035, -uTime * 0.022, uTime * 0.018));
-  float folded = abs(point.y + 0.18 * sin(point.x * 4.0 + uTime * 0.24));
+  vec2 flow = uNebulaFlow * uTime * 0.06;
+  float cloud = fbm(point * (2.15 + uTurbulence * 0.42) + vec3(flow, uTime * 0.018));
+  float folded = abs(point.y - uLightBias * 0.42 + (0.14 + uTurbulence * 0.14) * sin(point.x * 4.0 + uTime * 0.24));
   float band = exp(-folded * 6.2) * (1.0 - smoothstep(0.08, 1.15, length(point.xy)));
   return smoothstep(0.34, 0.8, cloud) * 0.7 + band;
 }
@@ -105,11 +111,12 @@ void main() {
   rotated.yz = rotation(-0.22 + sin(uTime * 0.09) * 0.08) * rotated.yz;
 
   float density = nebulaDensity(rotated);
-  vec2 corePoint = rotated.xy - vec2(-0.12, 0.04);
+  vec2 corePoint = rotated.xy - vec2(-0.12, 0.04 + uLightBias);
   float core = galaxyCore(corePoint);
   vec2 starUv = rotated.xy / max(0.28, 0.42 + rotated.z);
-  float stars = starLayer(starUv + uTime * 0.0015, 24.0, 0.88);
-  stars += starLayer(starUv - uTime * 0.001, 53.0, 0.965) * 0.75;
+  float stars = starLayer(starUv + uTime * 0.0015, 24.0, 0.88 - (uStarDensity - 1.0) * 0.055);
+  stars += starLayer(starUv - uTime * 0.001, 53.0, 0.965 - (uStarDensity - 1.0) * 0.025) * 0.75;
+  stars *= 0.65 + uStarDensity * 0.35;
 
   vec3 cosmicMain = mix(uColorMain, vec3(uColorLight.r, uColorDeep.g * 0.25, uColorLight.b), 0.48);
   cosmicMain.g *= 0.82;
@@ -126,6 +133,8 @@ void main() {
   color += cosmicMain * density * 0.72;
   color += cosmicLight * (core * 0.95 + stars * 1.35);
   color += cosmicLight * uPulse * (0.12 + core * 0.35);
+  float moodBreath = 0.5 + 0.5 * sin(uTime * (0.55 + uMoodPulse));
+  color += cosmicLight * uMoodPulse * moodBreath * (0.035 + core * 0.08);
 
   float fresnel = pow(1.0 - z, 3.1);
   float rimAngle = atan(p.y, p.x);

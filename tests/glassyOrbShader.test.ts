@@ -4,9 +4,20 @@ import { FRAGMENT_SHADER, VERTEX_SHADER } from '../src/components/glassyOrbShade
 
 test('shader exposes every renderer attribute and uniform', () => {
   assert.match(VERTEX_SHADER, /attribute vec2 aPosition/)
-  for (const uniform of ['uResolution', 'uTime', 'uSpin', 'uPulse', 'uColorMain', 'uColorDeep', 'uColorLight', 'uSilverTone']) {
+  for (const uniform of [
+    'uResolution', 'uTime', 'uSpin', 'uPulse', 'uColorMain', 'uColorDeep', 'uColorLight',
+    'uSilverTone', 'uNebulaFlow', 'uStarDensity', 'uLightBias', 'uTurbulence', 'uMoodPulse',
+  ]) {
     assert.match(FRAGMENT_SHADER, new RegExp(`uniform .* ${uniform};`))
   }
+})
+
+test('shader drives internal flow, density, light position, turbulence, and mood pulse from uniforms', () => {
+  assert.match(FRAGMENT_SHADER, /uNebulaFlow \* uTime/)
+  assert.match(FRAGMENT_SHADER, /uStarDensity/)
+  assert.match(FRAGMENT_SHADER, /uLightBias/)
+  assert.match(FRAGMENT_SHADER, /uTurbulence/)
+  assert.match(FRAGMENT_SHADER, /uMoodPulse/)
 })
 
 test('fragment shader contains nebula, stars, Fresnel glass, and prismatic rim stages', () => {

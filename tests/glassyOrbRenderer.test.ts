@@ -4,6 +4,7 @@ import {
   compileShader,
   createGlassyOrbRenderer,
   resizeDrawingBuffer,
+  settleFactor,
 } from '../src/components/glassyOrbRenderer.ts'
 
 test('resizeDrawingBuffer uses capped DPR and only mutates changed dimensions', () => {
@@ -36,4 +37,11 @@ test('createGlassyOrbRenderer returns null and invokes fallback when WebGL is un
   const renderer = createGlassyOrbRenderer(canvas, () => undefined, () => { failed = true })
   assert.equal(renderer, null)
   assert.equal(failed, true)
+})
+
+test('settleFactor eases renderer state over the approved seven hundred milliseconds', () => {
+  assert.equal(settleFactor(0, 700), 0)
+  assert.ok(settleFactor(350, 700) > 0 && settleFactor(350, 700) < 1)
+  assert.ok(settleFactor(700, 700) > 0.6)
+  assert.equal(settleFactor(16, 0), 1)
 })
