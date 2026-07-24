@@ -1,8 +1,27 @@
+export type MoodId =
+  | 'very-low'
+  | 'low'
+  | 'heavy'
+  | 'calm'
+  | 'okay'
+  | 'bright'
+  | 'joyful'
+  | 'lonely'
+  | 'sad'
+  | 'angry'
+  | 'afraid'
+  | 'disappointed'
+  | 'anxious'
+  | 'aggrieved'
+  | 'embarrassed'
+
 export interface MoodState {
   /** 情绪效价 -3(非常低落) .. 3(非常明亮) */
   valence: number
   /** 情绪词标签 */
   labels: string[]
+  /** 可选的离散情绪，兼容旧的仅效价记录 */
+  emotionId?: MoodId
 }
 
 export type EntryKind = 'now' | 'past'
