@@ -24,6 +24,22 @@ test('the active mood tick stays at the lower focus point while nearby ticks orb
   assert.equal(moodTickOpacity(10, 3, 15), 0.22)
 })
 
+test('all ticks keep fixed spacing and rotate as one rigid dial', () => {
+  const from = 3
+  const to = nearestMoodPosition(from, 12, 15)
+  const rotations = Array.from({ length: 15 }, (_, index) => (
+    moodTickAngle(index, to, 15) - moodTickAngle(index, from, 15)
+  ))
+
+  assert.deepEqual([...new Set(rotations)], [144])
+  assert.deepEqual(
+    Array.from({ length: 14 }, (_, index) => (
+      moodTickAngle(index + 1, to, 15) - moodTickAngle(index, to, 15)
+    )),
+    Array(14).fill(24),
+  )
+})
+
 test('collapsed orbit text exposes only the active mood', () => {
   const active = moodOrbitTextPose(3, 3, 15, false)
   const neighbor = moodOrbitTextPose(4, 3, 15, false)

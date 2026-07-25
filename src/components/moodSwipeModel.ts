@@ -70,10 +70,10 @@ function moodOrbitDistance(index: number, position: number, count: number): numb
   return nearestMoodPosition(position, index, count) - position
 }
 
-/** Keeps the selected tick at the lower focus point while the ring rotates around it. */
+/** Uses one unbounded rotation frame so every tick moves as part of the same rigid dial. */
 export function moodTickAngle(index: number, position: number, count: number): number {
   if (!Number.isInteger(count) || count < 1) return 180
-  return 180 + moodOrbitDistance(index, position, count) * (360 / count)
+  return 180 + (index - position) * (360 / count)
 }
 
 /** Every mood remains represented by a tick, with focus falling off into graphite silver. */
