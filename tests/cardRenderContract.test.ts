@@ -14,6 +14,16 @@ import {
   cardRenderContract,
 } from '../src/lib/card.ts'
 
+const sampleEntry = {
+  id: 'memory-1',
+  createdAt: new Date('2026-07-25T08:00:00+08:00').getTime(),
+  kind: 'past' as const,
+  mood: { valence: 2, labels: ['平静', '释然'], emotionId: 'bright' as const },
+  timeMark: '去年夏天',
+  diary: '这一天一直安静地住在我心里。',
+  diaryEnabled: true,
+}
+
 test('named moods reuse the exact MoodPlanetImage sheet and crop contract', () => {
   for (const mood of ECHO_MOODS) {
     const asset = getMoodOrbAsset(mood.id)
@@ -63,7 +73,123 @@ test('the card page awaits async rendering and cancels stale or unmounted work',
   const cardPage = readFileSync(new URL('../src/pages/Card.tsx', import.meta.url), 'utf8')
 
   assert.match(cardPage, /const controller = new AbortController\(\)/)
-  assert.match(cardPage, /await renderCard\(entry, \{ signal: controller\.signal \}\)/)
-  assert.match(cardPage, /if \(active\) setUrl\(nextUrl\)/)
+  assert.match(cardPage, /await renderCard\(entryToRender, template\.id, \{ signal: controller\.signal \}\)/)
+  assert.match(cardPage, /if \(active\)/)
   assert.match(cardPage, /return \(\) => \{\s*active = false\s*controller\.abort\(\)\s*\}/s)
+})
+
+test('the sticker registry exposes A, B, and C with the mist-violet ticket first', async () => {
+  const cardModule = await import('../src/lib/card.ts')
+  const templates = Reflect.get(cardModule, 'STICKER_TEMPLATES')
+
+  assert.deepEqual(templates, [
+    { id: 'planet-letter', name: '星球票根', tone: '雾紫票纸' },
+    { id: 'fragment-archive', name: '碎片档案', tone: '编辑杂志' },
+    { id: 'orbit-theatre', name: '轨道剧场', tone: '社交海报' },
+  ])
+})
+
+test('invalid or missing template IDs fall back to A', async () => {
+  const cardModule = await import('../src/lib/card.ts')
+  const normalize = Reflect.get(cardModule, 'normalizeStickerTemplate')
+  const fallback = Reflect.get(cardModule, 'DEFAULT_STICKER_TEMPLATE')
+
+  assert.equal(typeof normalize, 'function')
+  assert.equal(fallback, 'planet-letter')
+  assert.equal(normalize(undefined), fallback)
+  assert.equal(normalize('unknown'), fallback)
+  assert.equal(normalize('orbit-theatre'), 'orbit-theatre')
+})
+
+test('every template keeps the exact homepage mood artwork contract', () => {
+  const mood = sampleEntry.mood
+
+  for (const templateId of ['planet-letter', 'fragment-archive', 'orbit-theatre']) {
+    const contract = cardRenderContract(mood, templateId)
+    assert.equal(Reflect.get(contract, 'templateId'), templateId)
+    assert.deepEqual(contract.artwork, cardMoodArtwork('bright'))
+  }
+})
+
+test('memory tickets receive a stable branded ID without a fake QR generator', async () => {
+  const cardModule = await import('../src/lib/card.ts')
+  const ticketId = Reflect.get(cardModule, 'memoryTicketId')
+  const cardSource = readFileSync(new URL('../src/lib/card.ts', import.meta.url), 'utf8')
+
+  assert.equal(typeof ticketId, 'function')
+  assert.match(ticketId(sampleEntry), /^ML-\d{6}-\d{2}-[A-Z0-9]{4}$/)
+  assert.equal(ticketId(sampleEntry), ticketId(sampleEntry))
+  assert.doesNotMatch(cardSource, /memoryCodeGrid|drawMemoryCode/)
+})
+
+test('the selected sticker template is persisted on each memory entry', () => {
+  const typesSource = readFileSync(new URL('../src/types.ts', import.meta.url), 'utf8')
+
+  assert.match(typesSource, /export type StickerTemplateId = 'planet-letter' \| 'fragment-archive' \| 'orbit-theatre'/)
+  assert.match(typesSource, /stickerTemplate\?: StickerTemplateId/)
+})
+
+test('the card page renders all templates asynchronously and persists selection', () => {
+  const cardPage = readFileSync(new URL('../src/pages/Card.tsx', import.meta.url), 'utf8')
+
+  assert.match(cardPage, /Promise\.all\(/)
+  assert.match(cardPage, /renderCard\(entryToRender, template\.id, \{ signal: controller\.signal \}\)/)
+  assert.match(cardPage, /updateEntry\(entry\.id, \{ stickerTemplate: next \}\)/)
+  assert.match(cardPage, /controller\.abort\(\)/)
+})
+
+test('named mood artwork failures reject instead of exporting the wrong fallback planet', async () => {
+  const cardModule = await import('../src/lib/card.ts')
+  const render = Reflect.get(cardModule, 'renderCard')
+  const originalImage = Reflect.get(globalThis, 'Image')
+
+  class FailingImage {
+    decoding = ''
+    onload: (() => void) | null = null
+    onerror: (() => void) | null = null
+
+    set src(_value: string) {
+      queueMicrotask(() => this.onerror?.())
+    }
+  }
+
+  Reflect.set(globalThis, 'Image', FailingImage)
+  try {
+    await assert.rejects(
+      render(sampleEntry, 'planet-letter'),
+      /Unable to load mood artwork/,
+    )
+  } finally {
+    if (originalImage === undefined) Reflect.deleteProperty(globalThis, 'Image')
+    else Reflect.set(globalThis, 'Image', originalImage)
+  }
+})
+
+test('persisting template choice does not invalidate already rendered stickers', async () => {
+  const cardModule = await import('../src/lib/card.ts')
+  const renderKey = Reflect.get(cardModule, 'stickerRenderKey')
+
+  assert.equal(typeof renderKey, 'function')
+  assert.equal(
+    renderKey(sampleEntry),
+    renderKey({ ...sampleEntry, stickerTemplate: 'orbit-theatre' }),
+  )
+  assert.notEqual(
+    renderKey(sampleEntry),
+    renderKey({ ...sampleEntry, diary: '内容发生变化。' }),
+  )
+})
+
+test('template switching reuses rendered URLs and failure state is not announced as busy', () => {
+  const cardPage = readFileSync(new URL('../src/pages/Card.tsx', import.meta.url), 'utf8')
+
+  assert.doesNotMatch(cardPage, /\}, \[entry\]\)/)
+  assert.match(cardPage, /aria-busy=\{isLoading\}/)
+  assert.match(cardPage, /renderError \? \(/)
+})
+
+test('all sticker layouts stay inside the moon-silver violet family', () => {
+  const cardSource = readFileSync(new URL('../src/lib/card.ts', import.meta.url), 'utf8')
+
+  assert.doesNotMatch(cardSource, /#4c6fe6/i)
 })

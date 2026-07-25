@@ -26,6 +26,8 @@ export interface MoodState {
 
 export type EntryKind = 'now' | 'past'
 
+export type StickerTemplateId = 'planet-letter' | 'fragment-archive' | 'orbit-theatre'
+
 export interface ChatMessage {
   role: 'user' | 'ai'
   text: string
@@ -47,6 +49,8 @@ export interface Entry {
   diary?: string
   /** 是否沉淀为日记 */
   diaryEnabled: boolean
+  /** 该条回忆上次选中的分享贴纸模板 */
+  stickerTemplate?: StickerTemplateId
 }
 
 export type Screen =

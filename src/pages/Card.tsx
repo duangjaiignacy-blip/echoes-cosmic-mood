@@ -1,6 +1,12 @@
-import { useEffect, useState } from 'react'
-import { renderCard } from '../lib/card'
-import type { Entry } from '../types'
+import { useEffect, useRef, useState } from 'react'
+import {
+  normalizeStickerTemplate,
+  renderCard,
+  stickerRenderKey,
+  STICKER_TEMPLATES,
+} from '../lib/card'
+import { updateEntry } from '../store'
+import type { Entry, StickerTemplateId } from '../types'
 
 interface Props {
   entry: Entry
@@ -8,23 +14,45 @@ interface Props {
 }
 
 export function Card({ entry, onDone }: Props) {
-  const [url, setUrl] = useState<string | null>(null)
+  const [selected, setSelected] = useState<StickerTemplateId>(() =>
+    normalizeStickerTemplate(entry.stickerTemplate),
+  )
+  const [urls, setUrls] = useState<Partial<Record<StickerTemplateId, string>>>({})
+  const [renderError, setRenderError] = useState<string | null>(null)
+  const [renderRevision, setRenderRevision] = useState(0)
+  const renderKey = stickerRenderKey(entry)
+  const entryRef = useRef(entry)
+  entryRef.current = entry
+
+  useEffect(() => {
+    setSelected(normalizeStickerTemplate(entry.stickerTemplate))
+  }, [entry.id, entry.stickerTemplate])
 
   useEffect(() => {
     let active = true
     const controller = new AbortController()
-    setUrl(null)
+    const entryToRender = entryRef.current
+    setUrls({})
+    setRenderError(null)
 
-    // 等字体就绪后渲染，避免卡片字体回退
     const run = async () => {
       try {
         if (document.fonts?.ready) {
           await document.fonts.ready.catch(() => undefined)
         }
-        const nextUrl = await renderCard(entry, { signal: controller.signal })
-        if (active) setUrl(nextUrl)
+        const pairs = await Promise.all(
+          STICKER_TEMPLATES.map(async (template) => [
+            template.id,
+            await renderCard(entryToRender, template.id, { signal: controller.signal }),
+          ] as const),
+        )
+        if (active) {
+          setUrls(Object.fromEntries(pairs) as Record<StickerTemplateId, string>)
+        }
       } catch (error) {
         if (active && !(error instanceof DOMException && error.name === 'AbortError')) {
+          setUrls({})
+          setRenderError(error instanceof Error ? error.message : '贴纸显影失败，请稍后再试。')
           console.error('[Card] 贴纸渲染失败', error)
         }
       }
@@ -35,72 +63,121 @@ export function Card({ entry, onDone }: Props) {
       active = false
       controller.abort()
     }
-  }, [entry])
+  }, [renderKey, renderRevision])
+
+  const url = urls[selected] ?? null
+  const isLoading = !url && !renderError
+
+  const selectTemplate = (next: StickerTemplateId) => {
+    setSelected(next)
+    updateEntry(entry.id, { stickerTemplate: next })
+  }
 
   const download = () => {
     if (!url) return
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `echoes-${entry.timeMark ?? '此刻'}.png`
-    a.click()
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = `milo-${entry.timeMark ?? '此刻'}-${selected}.png`
+    anchor.click()
   }
 
   const share = async () => {
     if (!url) return
     try {
       const blob = await (await fetch(url)).blob()
-      const file = new File([blob], 'echoes.png', { type: 'image/png' })
+      const file = new File([blob], 'milo-memory.png', { type: 'image/png' })
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: '回响 · 一段回忆' })
+        await navigator.share({ files: [file], title: '米洛 · 一段回忆' })
         return
       }
     } catch {
-      /* 用户取消或不支持 */
+      /* 用户取消或系统不支持时回退到下载 */
     }
     download()
   }
 
   return (
-    <div className="screen screen-scroll">
-      <div className="topbar">
+    <main className="screen screen-scroll memory-sticker-screen">
+      <header className="topbar">
         <button className="back-link" onClick={onDone}>
           ← 完成
         </button>
-      </div>
+      </header>
 
-      <div style={{ textAlign: 'center', marginBottom: 18 }}>
-        <h1 className="title">你的回忆贴纸</h1>
-        <p className="subtitle" style={{ marginTop: 8 }}>
-          可以保存下来，或分享到社交媒体。
-        </p>
-      </div>
+      <section className="sticker-intro">
+        <p className="eyebrow">MILO MEMORY</p>
+        <h1 className="title">你的情绪票根</h1>
+        <p className="subtitle">把这颗星球，分享给今天的世界。</p>
+      </section>
 
-      <div className="fade-in" style={{ display: 'flex', justifyContent: 'center', marginBottom: 22 }}>
+      <section className="sticker-preview-shell" aria-live="polite" aria-busy={isLoading}>
         {url ? (
           <img
+            key={selected}
+            className="sticker-preview-image"
             src={url}
-            alt="回忆卡片"
-            style={{
-              width: '78%',
-              borderRadius: 24,
-              boxShadow: '0 24px 80px rgba(0,0,0,0.55), 0 0 60px rgba(139,124,246,0.18)',
-            }}
+            alt={`${STICKER_TEMPLATES.find((item) => item.id === selected)?.name ?? '回忆'}贴纸预览`}
           />
+        ) : renderError ? (
+          <div className="sticker-preview-skeleton sticker-preview-error">
+            <span>这次没有显影完成</span>
+            <button type="button" onClick={() => setRenderRevision((value) => value + 1)}>
+              重新显影
+            </button>
+          </div>
         ) : (
-          <div className="hint" style={{ padding: 60 }}>
-            贴纸显影中…
+          <div className="sticker-preview-skeleton">
+            <span>贴纸显影中…</span>
           </div>
         )}
-      </div>
+      </section>
 
-      <div style={{ display: 'flex', gap: 12 }}>
-        <button className="btn" style={{ flex: 1 }} onClick={download} disabled={!url}>
+      <section className="template-picker" aria-labelledby="template-title">
+        <div className="template-picker-heading">
+          <div>
+            <p className="template-kicker">LAYOUTS</p>
+            <h2 id="template-title">选择贴纸模板</h2>
+          </div>
+          <span>{STICKER_TEMPLATES.findIndex((item) => item.id === selected) + 1} / {STICKER_TEMPLATES.length}</span>
+        </div>
+
+        <div className="template-strip">
+          {STICKER_TEMPLATES.map((template, index) => {
+            const isSelected = template.id === selected
+            return (
+              <button
+                key={template.id}
+                className={`template-card${isSelected ? ' is-selected' : ''}`}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => selectTemplate(template.id)}
+              >
+                <span className="template-number">0{index + 1}</span>
+                <span className="template-artwork">
+                  {urls[template.id] ? (
+                    <img src={urls[template.id]} alt="" />
+                  ) : (
+                    <span className="template-artwork-loading" />
+                  )}
+                </span>
+                <span className="template-name">{template.name}</span>
+                <span className="template-tone">{template.tone}</span>
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {renderError && <p className="sticker-error" role="alert">{renderError}</p>}
+
+      <footer className="sticker-actions">
+        <button className="btn" onClick={download} disabled={!url}>
           保存图片
         </button>
-        <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => void share()} disabled={!url}>
+        <button className="btn btn-primary" onClick={() => void share()} disabled={!url}>
           分享
         </button>
-      </div>
-    </div>
+      </footer>
+    </main>
   )
 }
