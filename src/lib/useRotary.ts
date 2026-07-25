@@ -1,5 +1,12 @@
 import { useEffect, useRef } from 'react'
 
+const INTERACTIVE_SELECTOR = 'button, a, input, textarea, select, [role="button"]'
+
+export function isInteractiveRotaryTarget(target: EventTarget | null): boolean {
+  const closest = (target as { closest?: (selector: string) => unknown } | null)?.closest
+  return typeof closest === 'function' && Boolean(closest.call(target, INTERACTIVE_SELECTOR))
+}
+
 /**
  * iPod 式旋转拨盘手势。
  * 在目标元素上做环形拖动（或滚轮/触控板滑动）时，回调旋转角度增量（度）。
@@ -28,6 +35,7 @@ export function useRotary(onDelta: (deg: number) => void, onEnd?: () => void) {
     }
 
     const down = (e: PointerEvent) => {
+      if (isInteractiveRotaryTarget(e.target)) return
       dragging = true
       last = angleOf(e)
       el.setPointerCapture(e.pointerId)
