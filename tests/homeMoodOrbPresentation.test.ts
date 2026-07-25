@@ -14,11 +14,11 @@ test('echo mode uses the original raster orbit on both chooser steps', () => {
   assert.match(home, /<MoodPlanetImage[\s\S]*moodId=\{echoMood\.id\}/)
 })
 
-test('the orbit exposes all fifteen fixed mood controls', async () => {
+test('the orbit exposes the seven level-selector mood controls', async () => {
   const { readFile } = await import('node:fs/promises')
   const carousel = await readFile(carouselUrl, 'utf8')
 
-  assert.match(carousel, /ECHO_MOODS\.map/)
+  assert.match(carousel, /ECHO_SELECTOR_MOODS\.map/)
   assert.match(carousel, /className="mood-orbit-step"/)
   assert.match(carousel, /className="mood-orbit-text"/)
   assert.match(carousel, /aria-label=\{`选择\$\{mood\.label\}`\}/)
@@ -31,7 +31,7 @@ test('the orbit renders only the active mood artwork', async () => {
   const { readFile } = await import('node:fs/promises')
   const carousel = await readFile(carouselUrl, 'utf8')
 
-  assert.match(carousel, /const activeMood = ECHO_MOODS\[activeIndex\]/)
+  assert.match(carousel, /const activeMood = ECHO_SELECTOR_MOODS\[activeIndex\]/)
   assert.match(carousel, /<MoodPlanetImage moodId=\{activeMood\.id\}/)
 })
 

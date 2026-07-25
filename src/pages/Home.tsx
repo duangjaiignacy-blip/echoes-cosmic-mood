@@ -3,8 +3,12 @@ import { MoodOrb } from '../components/MoodOrb'
 import { MoodOrbitCarousel } from '../components/MoodOrbitCarousel'
 import { MoodPlanetImage } from '../components/MoodPlanetImage'
 import { activeMoodIndex, nearestMoodPosition } from '../components/moodSwipeModel'
-import { DEFAULT_ECHO_MOOD_INDEX, ECHO_MOODS } from '../components/moodEmotionModel'
-import { getMoodDescriptorWords, moodPolarity } from '../components/moodTaxonomyModel'
+import {
+  DEFAULT_ECHO_SELECTOR_INDEX,
+  ECHO_SELECTOR_MOODS,
+  getMoodDescriptorWords,
+  moodPolarity,
+} from '../components/moodTaxonomyModel'
 import { useMoodSwipe, type MoodSwipePhase } from '../lib/useMoodSwipe'
 import { useRotary } from '../lib/useRotary'
 import type { MoodState } from '../types'
@@ -34,17 +38,17 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
 
   /* ---- 第一步：旋转调整整体感受 ---- */
   const [angle, setAngle] = useState(0) // -270..270，每 90° 一档
-  const [echoPosition, setEchoPosition] = useState(DEFAULT_ECHO_MOOD_INDEX)
+  const [echoPosition, setEchoPosition] = useState(DEFAULT_ECHO_SELECTOR_INDEX)
   const [echoPhase, setEchoPhase] = useState<MoodSwipePhase | 'idle'>('idle')
   const [orbitExpanded, setOrbitExpanded] = useState(true)
   const [pulse, setPulse] = useState(false)
   const prevLevel = useRef(0)
-  const prevEchoMoodIndex = useRef(DEFAULT_ECHO_MOOD_INDEX)
+  const prevEchoMoodIndex = useRef(DEFAULT_ECHO_SELECTOR_INDEX)
 
   const valence = angle / 90 // 连续值 -3..3
   const level = Math.max(-3, Math.min(3, Math.round(valence)))
-  const echoMoodIndex = activeMoodIndex(echoPosition, ECHO_MOODS.length)
-  const echoMood = ECHO_MOODS[echoMoodIndex]
+  const echoMoodIndex = activeMoodIndex(echoPosition, ECHO_SELECTOR_MOODS.length)
+  const echoMood = ECHO_SELECTOR_MOODS[echoMoodIndex]
   const selectedMood = {
     valence: echoVoid ? echoMood.valence : level,
     ...(echoVoid ? { emotionId: echoMood.id } : {}),
@@ -69,7 +73,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
   })
 
   const updateEchoPosition = (position: number, phase: MoodSwipePhase) => {
-    const nextIndex = activeMoodIndex(position, ECHO_MOODS.length)
+    const nextIndex = activeMoodIndex(position, ECHO_SELECTOR_MOODS.length)
     if (nextIndex !== prevEchoMoodIndex.current) {
       prevEchoMoodIndex.current = nextIndex
       navigator.vibrate?.(8)
@@ -81,20 +85,25 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
 
   const selectEchoMood = (index: number) => {
     setOrbitExpanded(true)
-    const nextPosition = nearestMoodPosition(echoPosition, index, ECHO_MOODS.length)
+    const nextPosition = nearestMoodPosition(echoPosition, index, ECHO_SELECTOR_MOODS.length)
     updateEchoPosition(nextPosition, 'settling')
   }
 
-  const moodSwipe = useMoodSwipe(echoPosition, updateEchoPosition, !echoVoid || step !== 'feel')
+  const moodSwipe = useMoodSwipe(
+    echoPosition,
+    updateEchoPosition,
+    ECHO_SELECTOR_MOODS.length,
+    !echoVoid || step !== 'feel',
+  )
 
   const handleMoodKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!echoVoid || step !== 'feel') return
     if (event.key === 'ArrowLeft') {
       event.preventDefault()
-      selectEchoMood(echoMoodIndex - 1)
+      selectEchoMood(echoMoodIndex + 1)
     } else if (event.key === 'ArrowRight') {
       event.preventDefault()
-      selectEchoMood(echoMoodIndex + 1)
+      selectEchoMood(echoMoodIndex - 1)
     }
   }
 
@@ -165,7 +174,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
             role={echoVoid ? 'slider' : undefined}
             tabIndex={echoVoid ? 0 : undefined}
             aria-valuemin={echoVoid ? 1 : undefined}
-            aria-valuemax={echoVoid ? ECHO_MOODS.length : undefined}
+            aria-valuemax={echoVoid ? ECHO_SELECTOR_MOODS.length : undefined}
             aria-valuenow={echoVoid ? echoMoodIndex + 1 : undefined}
             aria-valuetext={echoVoid ? echoMood.label : undefined}
             onKeyDown={handleMoodKeyDown}

@@ -2,67 +2,32 @@ import type { MoodId } from '../types'
 import { ECHO_MOODS, getMoodVisual } from './moodEmotionModel.ts'
 
 export type MoodPolarity = 'negative' | 'neutral' | 'positive'
-export type MoodOrbitSide = 'left' | 'boundary' | 'right'
 
 export interface MoodSelection {
   valence: number
   emotionId?: MoodId
 }
 
-export interface MoodTaxonomyPosition {
-  id: MoodId
-  polarity: MoodPolarity
-  side: MoodOrbitSide
-  /** CSS clockwise angle: 0° top, 90° right, 180° bottom. */
-  angle: number
-  radius: number
-}
-
-const NEGATIVE_MOOD_ORDER: readonly MoodId[] = [
-  'sad',
-  'very-low',
-  'lonely',
-  'low',
-  'angry',
-  'afraid',
-  'disappointed',
-  'aggrieved',
-  'anxious',
+/**
+ * Display order for the rotating first-page selector.
+ * With calm focused at 180°, lower indices render on the right and higher
+ * indices on the left, so each side progresses outward by intensity.
+ */
+export const ECHO_SELECTOR_MOOD_IDS: readonly MoodId[] = Object.freeze([
+  'joyful',
+  'bright',
+  'okay',
+  'calm',
   'heavy',
-  'embarrassed',
-]
-
-const POSITIVE_MOOD_ORDER: readonly MoodId[] = ['okay', 'bright', 'joyful']
-
-const NEGATIVE_ANGLES = [195, 211, 227, 243, 259, 275, 291, 307, 323, 339, 355] as const
-const NEGATIVE_RADII = [176, 204, 176, 204, 176, 204, 176, 204, 176, 204, 176] as const
-const POSITIVE_ANGLES = [40, 90, 140] as const
-
-export const MOOD_TAXONOMY_POSITIONS: readonly MoodTaxonomyPosition[] = Object.freeze([
-  ...NEGATIVE_MOOD_ORDER.map((id, index) => Object.freeze({
-    id,
-    polarity: 'negative' as const,
-    side: 'left' as const,
-    angle: NEGATIVE_ANGLES[index],
-    radius: NEGATIVE_RADII[index],
-  })),
-  Object.freeze({
-    id: 'calm' as const,
-    polarity: 'neutral' as const,
-    side: 'boundary' as const,
-    angle: 0,
-    radius: 176,
-  }),
-  ...POSITIVE_MOOD_ORDER.map((id, index) => Object.freeze({
-    id,
-    polarity: 'positive' as const,
-    side: 'right' as const,
-    angle: POSITIVE_ANGLES[index],
-    radius: 176,
-  })),
+  'low',
+  'very-low',
 ])
 
-const TAXONOMY_POSITION_BY_ID = new Map(MOOD_TAXONOMY_POSITIONS.map((position) => [position.id, position]))
+export const ECHO_SELECTOR_MOODS = Object.freeze(
+  ECHO_SELECTOR_MOOD_IDS.map((id) => getMoodVisual(id)),
+)
+
+export const DEFAULT_ECHO_SELECTOR_INDEX = ECHO_SELECTOR_MOODS.findIndex(({ id }) => id === 'calm')
 
 const BASE_DESCRIPTOR_WORDS: Readonly<Record<MoodPolarity, readonly string[]>> = Object.freeze({
   negative: Object.freeze([
@@ -146,12 +111,6 @@ export function moodPolarity(selection: MoodSelection): MoodPolarity {
     ? selection.valence
     : getMoodVisual(selection.emotionId).valence
   return polarityFromValence(valence)
-}
-
-export function getMoodTaxonomyPosition(id: MoodId): MoodTaxonomyPosition {
-  const position = TAXONOMY_POSITION_BY_ID.get(id)
-  if (!position) throw new RangeError(`Missing taxonomy position: ${id}`)
-  return position
 }
 
 export function getMoodDescriptorWords(selection: MoodSelection): readonly string[] {

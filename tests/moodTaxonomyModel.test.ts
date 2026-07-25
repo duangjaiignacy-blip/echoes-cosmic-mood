@@ -2,70 +2,77 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 
 import { ECHO_MOODS } from '../src/components/moodEmotionModel.ts'
+import { moodOrbitTextPose, moodTickAngle } from '../src/components/moodSwipeModel.ts'
 import {
+  DEFAULT_ECHO_SELECTOR_INDEX,
+  ECHO_SELECTOR_MOOD_IDS,
+  ECHO_SELECTOR_MOODS,
   getMoodDescriptorWords,
-  getMoodTaxonomyPosition,
-  MOOD_TAXONOMY_POSITIONS,
   moodPolarity,
   polarityFromValence,
 } from '../src/components/moodTaxonomyModel.ts'
 
-test('taxonomy positions cover all stable mood ids exactly once without reordering the registry', () => {
-  const taxonomyIds = MOOD_TAXONOMY_POSITIONS.map(({ id }) => id)
+test('first-page selector is an explicit seven-level subset while the registry keeps all fifteen moods', () => {
   const registryIds = ECHO_MOODS.map(({ id }) => id)
 
-  assert.equal(taxonomyIds.length, registryIds.length)
-  assert.deepEqual([...taxonomyIds].sort(), [...registryIds].sort())
-  assert.equal(new Set(taxonomyIds).size, taxonomyIds.length)
-  assert.equal(Object.isFrozen(MOOD_TAXONOMY_POSITIONS), true)
-  assert.deepEqual(registryIds.slice(0, 7), [
-    'very-low',
-    'low',
-    'heavy',
-    'calm',
-    'okay',
-    'bright',
+  assert.equal(registryIds.length, 15)
+  assert.deepEqual(ECHO_SELECTOR_MOOD_IDS, [
     'joyful',
+    'bright',
+    'okay',
+    'calm',
+    'heavy',
+    'low',
+    'very-low',
   ])
+  assert.deepEqual(ECHO_SELECTOR_MOODS.map(({ id }) => id), ECHO_SELECTOR_MOOD_IDS)
+  assert.equal(ECHO_SELECTOR_MOODS.length, 7)
+  assert.equal(DEFAULT_ECHO_SELECTOR_INDEX, 3)
+  assert.equal(ECHO_SELECTOR_MOODS[DEFAULT_ECHO_SELECTOR_INDEX]?.id, 'calm')
+  assert.equal(Object.isFrozen(ECHO_SELECTOR_MOOD_IDS), true)
+  assert.equal(Object.isFrozen(ECHO_SELECTOR_MOODS), true)
+  assert.ok(registryIds.includes('angry'))
+  assert.ok(!ECHO_SELECTOR_MOOD_IDS.includes('angry'))
 })
 
-test('negative moods occupy the left semicircle, positive moods the right, and calm the boundary', () => {
-  for (const mood of ECHO_MOODS) {
-    const position = getMoodTaxonomyPosition(mood.id)
-    const x = Math.sin(position.angle * Math.PI / 180) * position.radius
+test('default rotating poses place three negative levels left, calm at focus, and three positive levels right', () => {
+  for (const [index, mood] of ECHO_SELECTOR_MOODS.entries()) {
+    const pose = moodOrbitTextPose(
+      index,
+      DEFAULT_ECHO_SELECTOR_INDEX,
+      ECHO_SELECTOR_MOODS.length,
+      true,
+    )
+    const x = Math.sin(pose.angle * Math.PI / 180)
 
     if (mood.valence < 0) {
-      assert.equal(position.polarity, 'negative', mood.id)
-      assert.equal(position.side, 'left', mood.id)
-      assert.ok(x < -1, `${mood.id} must render left of the vertical boundary`)
+      assert.ok(x < -0.01, `${mood.id} must render left of the vertical boundary`)
     } else if (mood.valence > 0) {
-      assert.equal(position.polarity, 'positive', mood.id)
-      assert.equal(position.side, 'right', mood.id)
-      assert.ok(x > 1, `${mood.id} must render right of the vertical boundary`)
+      assert.ok(x > 0.01, `${mood.id} must render right of the vertical boundary`)
     } else {
       assert.equal(mood.id, 'calm')
-      assert.equal(position.polarity, 'neutral')
-      assert.equal(position.side, 'boundary')
-      assert.ok(Math.abs(x) < 1)
+      assert.equal(pose.angle, 180)
+      assert.equal(pose.distance, 0)
     }
   }
-
-  assert.equal(getMoodTaxonomyPosition('calm').angle, 0)
 })
 
-test('each half progresses from calm-adjacent mild moods toward stronger moods', () => {
-  const valenceById = new Map(ECHO_MOODS.map(({ id, valence }) => [id, valence]))
-  const negativeLevels = MOOD_TAXONOMY_POSITIONS
-    .filter(({ polarity }) => polarity === 'negative')
-    .sort((a, b) => b.angle - a.angle)
-    .map(({ id }) => valenceById.get(id))
-  const positiveLevels = MOOD_TAXONOMY_POSITIONS
-    .filter(({ polarity }) => polarity === 'positive')
-    .sort((a, b) => a.angle - b.angle)
-    .map(({ id }) => valenceById.get(id))
+test('selector labels and ticks share the same continuously rotating angle', () => {
+  const before = ECHO_SELECTOR_MOODS.map((_, index) => (
+    moodOrbitTextPose(index, DEFAULT_ECHO_SELECTOR_INDEX, ECHO_SELECTOR_MOODS.length, true)
+  ))
+  const after = ECHO_SELECTOR_MOODS.map((_, index) => (
+    moodOrbitTextPose(index, DEFAULT_ECHO_SELECTOR_INDEX + 0.5, ECHO_SELECTOR_MOODS.length, true)
+  ))
+  const expectedDelta = -0.5 * (360 / ECHO_SELECTOR_MOODS.length)
 
-  assert.deepEqual(negativeLevels, [-1, -1, -1, -2, -2, -2, -2, -2, -2, -3, -3])
-  assert.deepEqual(positiveLevels, [1, 2, 3])
+  for (let index = 0; index < ECHO_SELECTOR_MOODS.length; index++) {
+    assert.ok(Math.abs(after[index].angle - before[index].angle - expectedDelta) < 1e-9)
+    assert.equal(
+      after[index].angle,
+      moodTickAngle(index, DEFAULT_ECHO_SELECTOR_INDEX + 0.5, ECHO_SELECTOR_MOODS.length),
+    )
+  }
 })
 
 test('polarity uses a discrete emotion when present and keeps valence-only records compatible', () => {
@@ -96,7 +103,7 @@ test('valence-only descriptor rings use distinct twelve-word vocabularies by pol
   assert.ok(positive.includes('喜悦'))
 })
 
-test('discrete emotions refine descriptor words while retaining stable unique rings', () => {
+test('all fifteen discrete emotions can refine the second-page descriptor ring', () => {
   for (const mood of ECHO_MOODS) {
     const words = getMoodDescriptorWords({ valence: mood.valence, emotionId: mood.id })
     assert.equal(words.length, 12, mood.id)

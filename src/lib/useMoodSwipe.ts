@@ -10,7 +10,6 @@ import {
   shortestMoodAngleDelta,
   shouldSuppressMoodClick,
 } from '../components/moodSwipeModel'
-import { ECHO_MOODS } from '../components/moodEmotionModel'
 
 export type MoodSwipePhase = 'dragging' | 'settling'
 
@@ -24,8 +23,8 @@ const VELOCITY_WINDOW_MS = 100
 export function useMoodSwipe(
   position: number,
   onPositionChange: (position: number, phase: MoodSwipePhase) => void,
+  count: number,
   disabled = false,
-  count = ECHO_MOODS.length,
 ) {
   const ref = useRef<HTMLDivElement>(null)
   const positionRef = useRef(position)
@@ -35,7 +34,7 @@ export function useMoodSwipe(
 
   useEffect(() => {
     const element = ref.current
-    if (!element || disabled) return
+    if (!element || disabled || count < 2) return
 
     let startPosition = positionRef.current
     let livePosition = startPosition
