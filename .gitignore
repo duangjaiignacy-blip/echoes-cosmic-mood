@@ -12,6 +12,7 @@ dist
 dist-ssr
 *.local
 .worktrees/
+.netlify/
 
 # Editor directories and files
 .vscode/*
