@@ -37,6 +37,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
   const [angle, setAngle] = useState(0) // -270..270，每 90° 一档
   const [echoPosition, setEchoPosition] = useState(DEFAULT_ECHO_MOOD_INDEX)
   const [echoPhase, setEchoPhase] = useState<MoodSwipePhase | 'idle'>('idle')
+  const [orbitExpanded, setOrbitExpanded] = useState(false)
   const [pulse, setPulse] = useState(false)
   const prevLevel = useRef(0)
   const prevEchoMoodIndex = useRef(DEFAULT_ECHO_MOOD_INDEX)
@@ -71,6 +72,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
   }
 
   const selectEchoMood = (index: number) => {
+    setOrbitExpanded(true)
     const nextPosition = nearestMoodPosition(echoPosition, index, ECHO_MOODS.length)
     updateEchoPosition(nextPosition, 'settling')
   }
@@ -170,7 +172,9 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
                 position={echoPosition}
                 activeIndex={echoMoodIndex}
                 phase={echoPhase}
+                expanded={orbitExpanded}
                 onSelect={selectEchoMood}
+                onExpandedChange={setOrbitExpanded}
               />
             ) : (
               <div className="dial-orb-center">
@@ -187,11 +191,11 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
                 data-mood-id={echoMood.id}
                 aria-live="polite"
               >
-                <span aria-hidden="true">‹</span>
                 <span>{echoMood.label}</span>
-                <span aria-hidden="true">›</span>
               </div>
-              <div className="dial-hint echo-swipe-hint">左右滑动，看看还有哪些感受</div>
+              <div className="dial-hint echo-swipe-hint">
+                {orbitExpanded ? '滑动刻度环，看看还有哪些感受' : '点击星球，展开情绪'}
+              </div>
             </>
           ) : (
             <>

@@ -13,6 +13,14 @@ export interface OrbitalMoodPose {
   zIndex: number
 }
 
+export interface MoodOrbitTextPose {
+  visible: boolean
+  angle: number
+  distance: number
+  opacity: number
+  scale: number
+}
+
 export interface MoodDragTargetDescriptor {
   readonly tagName?: string
   readonly isContentEditable?: boolean
@@ -55,6 +63,43 @@ export function nearestMoodPosition(position: number, targetIndex: number, count
   const wrappedTarget = wrapMoodIndex(targetIndex, count)
   const cycle = Math.round((position - wrappedTarget) / count)
   return wrappedTarget + cycle * count
+}
+
+function moodOrbitDistance(index: number, position: number, count: number): number {
+  if (!Number.isInteger(count) || count < 1) return 0
+  return nearestMoodPosition(position, index, count) - position
+}
+
+/** Keeps the selected tick at the lower focus point while the ring rotates around it. */
+export function moodTickAngle(index: number, position: number, count: number): number {
+  if (!Number.isInteger(count) || count < 1) return 180
+  return 180 + moodOrbitDistance(index, position, count) * (360 / count)
+}
+
+/** Every mood remains represented by a tick, with focus falling off into graphite silver. */
+export function moodTickOpacity(index: number, position: number, count: number): number {
+  const distance = Math.abs(moodOrbitDistance(index, position, count))
+  return Math.max(0.22, 1 - distance * 0.3)
+}
+
+/** Only the focused word and its immediate neighbors crossfade into the expanded ring. */
+export function moodOrbitTextPose(
+  index: number,
+  position: number,
+  count: number,
+  expanded: boolean,
+): MoodOrbitTextPose {
+  const distance = moodOrbitDistance(index, position, count)
+  const isActive = wrapMoodIndex(index, count) === activeMoodIndex(position, count)
+  const opacity = expanded ? Math.max(0, 1 - Math.abs(distance) * 0.65) : isActive ? 1 : 0
+
+  return {
+    visible: opacity > 0.01,
+    angle: moodTickAngle(index, position, count),
+    distance,
+    opacity,
+    scale: 0.86 + opacity * 0.14,
+  }
 }
 
 export function projectMoodSnap(

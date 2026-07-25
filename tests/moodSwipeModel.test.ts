@@ -6,11 +6,59 @@ import {
   activeMoodIndex,
   moodPositionFromDrag,
   nearestMoodPosition,
+  moodOrbitTextPose,
+  moodTickAngle,
+  moodTickOpacity,
   orbitalMoodPose,
   projectMoodSnap,
   isMoodDragStartAllowed,
   wrapMoodIndex,
 } from '../src/components/moodSwipeModel.ts'
+
+test('the active mood tick stays at the lower focus point while nearby ticks orbit it', () => {
+  assert.equal(moodTickAngle(3, 3, 15), 180)
+  assert.equal(moodTickAngle(4, 3, 15), 204)
+  assert.equal(moodTickAngle(2, 3, 15), 156)
+  assert.equal(moodTickOpacity(3, 3, 15), 1)
+  assert.equal(moodTickOpacity(4, 3, 15), 0.7)
+  assert.equal(moodTickOpacity(10, 3, 15), 0.22)
+})
+
+test('collapsed orbit text exposes only the active mood', () => {
+  const active = moodOrbitTextPose(3, 3, 15, false)
+  const neighbor = moodOrbitTextPose(4, 3, 15, false)
+
+  assert.equal(active.visible, true)
+  assert.equal(active.opacity, 1)
+  assert.equal(active.angle, 180)
+  assert.equal(neighbor.visible, false)
+  assert.equal(neighbor.opacity, 0)
+})
+
+test('expanded orbit text crossfades only the active mood and immediate neighbors', () => {
+  const active = moodOrbitTextPose(3, 3, 15, true)
+  const previous = moodOrbitTextPose(2, 3, 15, true)
+  const next = moodOrbitTextPose(4, 3, 15, true)
+  const remote = moodOrbitTextPose(5, 3, 15, true)
+
+  assert.equal(active.opacity, 1)
+  assert.equal(previous.opacity, 0.35)
+  assert.equal(next.opacity, 0.35)
+  assert.equal(previous.visible, true)
+  assert.equal(next.visible, true)
+  assert.equal(remote.visible, false)
+  assert.equal(remote.opacity, 0)
+  assert.ok(active.scale > next.scale)
+})
+
+test('expanded labels blend continuously while the ring is being dragged', () => {
+  const outgoing = moodOrbitTextPose(3, 3.4, 15, true)
+  const incoming = moodOrbitTextPose(4, 3.4, 15, true)
+
+  assert.ok(outgoing.opacity > incoming.opacity)
+  assert.ok(outgoing.opacity < 1)
+  assert.ok(incoming.opacity > 0.35)
+})
 
 test('continuous positions wrap and activate at the nearest half-step', () => {
   assert.equal(wrapMoodIndex(-1, 15), 14)
