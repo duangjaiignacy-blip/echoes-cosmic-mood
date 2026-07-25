@@ -4,6 +4,10 @@ import test from 'node:test'
 import * as swipeModel from '../src/components/moodSwipeModel.ts'
 import {
   activeMoodIndex,
+  chooseMoodDragAxis,
+  ECHO_MOOD_AXIS_LOCK_PX,
+  ECHO_MOOD_ORBIT_TRAVEL_PX,
+  ECHO_MOOD_STEP_PX,
   moodPositionFromDrag,
   nearestMoodPosition,
   moodOrbitTextPose,
@@ -80,10 +84,14 @@ test('continuous positions wrap and activate at the nearest half-step', () => {
   assert.equal(activeMoodIndex(3.51, 15), 4)
 })
 
-test('horizontal drag updates an unbounded position without stealing vertical intent', () => {
-  assert.equal(moodPositionFromDrag(3, -208, 0, 104), 5)
-  assert.equal(moodPositionFromDrag(3, 208, 0, 104), 1)
-  assert.equal(moodPositionFromDrag(3, -80, 90, 104), 3)
+test('short horizontal and vertical swipes move through moods after the axis locks', () => {
+  assert.equal(ECHO_MOOD_STEP_PX, 28)
+  assert.equal(ECHO_MOOD_AXIS_LOCK_PX, 6)
+  assert.equal(chooseMoodDragAxis(5, 1), null)
+  assert.equal(chooseMoodDragAxis(-14, 4), 'x')
+  assert.equal(chooseMoodDragAxis(3, -14), 'y')
+  assert.equal(moodPositionFromDrag(3, -56, 0, 28, 'x'), 5)
+  assert.equal(moodPositionFromDrag(3, 0, -56, 28, 'y'), 5)
 })
 
 test('fixed mood controls choose the nearest copy on the circular track', () => {
@@ -120,6 +128,15 @@ test('orbital poses expose only the current mood', () => {
   assert.equal(remote.opacity, 0)
 })
 
+test('visual planet travel stays independent from the short input threshold', () => {
+  assert.equal(ECHO_MOOD_ORBIT_TRAVEL_PX, 116)
+  const halfStep = orbitalMoodPose(4, 3.5, 15)
+
+  assert.equal(halfStep.x, 58)
+  assert.equal(halfStep.y, 5)
+  assert.ok(Math.abs(halfStep.scale - 0.93) < 1e-9)
+})
+
 test('continuous movement never exposes more than one mood at once', () => {
   for (const position of [3, 3.49, 3.5, 3.51, 4, 14.75, 15]) {
     const visible = Array.from({ length: 15 }, (_, index) => index)
@@ -135,6 +152,10 @@ test('the abrupt impact and bounce timers are no longer public behavior', () => 
 })
 
 test('dragging ignores buttons and their nested labels while preserving the carousel surface', () => {
+  assert.equal(isMoodDragStartAllowed([
+    { tagName: 'SPAN' },
+    { tagName: 'BUTTON', allowsMoodDrag: true },
+  ]), true)
   assert.equal(isMoodDragStartAllowed([{ tagName: 'SPAN' }, { tagName: 'BUTTON' }]), false)
   assert.equal(isMoodDragStartAllowed([{ tagName: 'A' }, { tagName: 'DIV' }]), false)
   assert.equal(isMoodDragStartAllowed([{ tagName: 'DIV' }, { tagName: 'SECTION' }]), true)

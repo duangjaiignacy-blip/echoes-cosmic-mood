@@ -1,6 +1,9 @@
 export type MoodSwipeDirection = -1 | 1
+export type MoodDragAxis = 'x' | 'y'
 
-export const ECHO_MOOD_STEP_PX = 104
+export const ECHO_MOOD_STEP_PX = 28
+export const ECHO_MOOD_AXIS_LOCK_PX = 6
+export const ECHO_MOOD_ORBIT_TRAVEL_PX = 116
 export const ECHO_MOOD_PROJECTION_MS = 160
 export const ECHO_MOOD_MAX_FLING_STEPS = 3
 
@@ -24,11 +27,13 @@ export interface MoodOrbitTextPose {
 export interface MoodDragTargetDescriptor {
   readonly tagName?: string
   readonly isContentEditable?: boolean
+  readonly allowsMoodDrag?: boolean
 }
 
 const INTERACTIVE_MOOD_TAGS = new Set(['a', 'button', 'input', 'label', 'select', 'textarea'])
 
 export function isMoodDragStartAllowed(path: readonly MoodDragTargetDescriptor[]): boolean {
+  if (path.some((target) => target.allowsMoodDrag === true)) return true
   return !path.some((target) => (
     target.isContentEditable === true
     || (target.tagName ? INTERACTIVE_MOOD_TAGS.has(target.tagName.toLowerCase()) : false)
@@ -44,8 +49,13 @@ export function activeMoodIndex(position: number, count: number): number {
   return wrapMoodIndex(Math.round(position), count)
 }
 
-export function hasHorizontalMoodIntent(deltaX: number, deltaY: number): boolean {
-  return Math.abs(deltaX) >= Math.abs(deltaY) * 1.15
+export function chooseMoodDragAxis(
+  deltaX: number,
+  deltaY: number,
+  lockPx = ECHO_MOOD_AXIS_LOCK_PX,
+): MoodDragAxis | null {
+  if (Math.hypot(deltaX, deltaY) < lockPx) return null
+  return Math.abs(deltaX) >= Math.abs(deltaY) ? 'x' : 'y'
 }
 
 export function moodPositionFromDrag(
@@ -53,9 +63,10 @@ export function moodPositionFromDrag(
   deltaX: number,
   deltaY: number,
   stepPx = ECHO_MOOD_STEP_PX,
+  axis: MoodDragAxis | null = chooseMoodDragAxis(deltaX, deltaY),
 ): number {
-  if (!hasHorizontalMoodIntent(deltaX, deltaY) || stepPx <= 0) return startPosition
-  return startPosition - deltaX / stepPx
+  if (!axis || stepPx <= 0) return startPosition
+  return startPosition - (axis === 'x' ? deltaX : deltaY) / stepPx
 }
 
 export function nearestMoodPosition(position: number, targetIndex: number, count: number): number {
@@ -124,7 +135,7 @@ export function orbitalMoodPose(index: number, position: number, count: number):
   if (!isActive) {
     return {
       visible: false,
-      x: distance * ECHO_MOOD_STEP_PX,
+      x: distance * ECHO_MOOD_ORBIT_TRAVEL_PX,
       y: 0,
       scale: 0.96,
       opacity: 0,
@@ -134,9 +145,9 @@ export function orbitalMoodPose(index: number, position: number, count: number):
 
   return {
     visible: true,
-    x: distance * ECHO_MOOD_STEP_PX,
-    y: 0,
-    scale: 1 - absoluteDistance * 0.08,
+    x: distance * ECHO_MOOD_ORBIT_TRAVEL_PX,
+    y: absoluteDistance * 10,
+    scale: 1 - absoluteDistance * 0.14,
     opacity: 1,
     zIndex: 30,
   }
