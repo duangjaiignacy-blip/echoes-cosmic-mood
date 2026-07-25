@@ -1613,3 +1613,292 @@ textarea.note-input {
   backdrop-filter: blur(12px);
 }
 textarea.note-input:focus { border-color: rgba(139, 124, 246, 0.55); }
+
+/* ---------- 回忆贴纸 ---------- */
+.memory-sticker-screen {
+  max-width: 560px;
+  padding-bottom: max(26px, env(safe-area-inset-bottom));
+}
+
+.sticker-intro {
+  margin: 2px 0 18px;
+  text-align: center;
+}
+
+.sticker-intro .eyebrow {
+  margin-bottom: 7px;
+  letter-spacing: 0.34em;
+}
+
+.sticker-intro .title {
+  font-size: clamp(27px, 7.2vw, 34px);
+  line-height: 1.35;
+}
+
+.sticker-intro .subtitle {
+  margin-top: 5px;
+  font-size: 13px;
+}
+
+.sticker-preview-shell {
+  display: grid;
+  min-height: 375px;
+  place-items: center;
+  margin-bottom: 20px;
+}
+
+.sticker-preview-image,
+.sticker-preview-skeleton {
+  width: min(76%, 320px);
+  aspect-ratio: 4 / 5;
+  border-radius: 23px;
+}
+
+.sticker-preview-image {
+  display: block;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    0 28px 76px rgba(0, 0, 0, 0.5),
+    0 0 54px rgba(139, 124, 246, 0.14);
+  animation: sticker-reveal 0.46s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes sticker-reveal {
+  from { opacity: 0; transform: translateY(7px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+.sticker-preview-skeleton {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--ink-faint);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+}
+
+.sticker-preview-error {
+  gap: 12px;
+  align-content: center;
+  color: rgba(226, 222, 235, 0.7);
+}
+
+.sticker-preview-error button {
+  appearance: none;
+  padding: 8px 15px;
+  color: rgba(241, 239, 247, 0.9);
+  border: 1px solid rgba(207, 192, 255, 0.26);
+  border-radius: 999px;
+  background: rgba(139, 124, 246, 0.12);
+  font: inherit;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.sticker-preview-skeleton::before,
+.template-artwork-loading::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.08) 47%, transparent 64%);
+  transform: translateX(-100%);
+  animation: sticker-shimmer 1.7s ease-in-out infinite;
+}
+
+@keyframes sticker-shimmer {
+  to { transform: translateX(100%); }
+}
+
+.template-picker {
+  margin-top: 1px;
+}
+
+.template-picker-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 11px;
+  padding: 0 2px;
+}
+
+.template-picker-heading h2 {
+  font-family: var(--serif);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+}
+
+.template-picker-heading > span,
+.template-kicker {
+  color: var(--ink-faint);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+}
+
+.template-kicker {
+  margin-bottom: 2px;
+}
+
+.template-strip {
+  display: flex;
+  gap: 10px;
+  margin: 0 -2px;
+  padding: 2px 2px 8px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.template-strip::-webkit-scrollbar { display: none; }
+
+.template-card {
+  position: relative;
+  flex: 1 0 112px;
+  min-width: 0;
+  padding: 7px;
+  scroll-snap-align: start;
+  appearance: none;
+  text-align: left;
+  color: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.018)),
+    rgba(8, 8, 21, 0.56);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+  cursor: pointer;
+  transition: border-color 0.24s ease, background 0.24s ease, transform 0.24s ease, box-shadow 0.24s ease;
+}
+
+.template-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.template-card:active { transform: translateY(0) scale(0.985); }
+
+.template-card:focus-visible,
+.back-link:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid rgba(207, 192, 255, 0.95);
+  outline-offset: 3px;
+}
+
+.template-card.is-selected {
+  border-color: rgba(186, 171, 255, 0.72);
+  background:
+    linear-gradient(180deg, rgba(166, 147, 255, 0.19), rgba(166, 147, 255, 0.055)),
+    rgba(12, 11, 29, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.17),
+    0 0 0 2px rgba(139, 124, 246, 0.08),
+    0 9px 28px rgba(29, 22, 64, 0.28);
+}
+
+.template-number {
+  position: absolute;
+  z-index: 2;
+  top: 12px;
+  left: 12px;
+  display: grid;
+  width: 24px;
+  height: 17px;
+  place-items: center;
+  color: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  background: rgba(6, 6, 15, 0.48);
+  backdrop-filter: blur(8px);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.template-artwork {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 4 / 3.35;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.template-artwork img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+}
+
+.template-artwork-loading {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.template-name,
+.template-tone {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.template-name {
+  margin: 8px 2px 1px;
+  font-family: var(--serif);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+}
+
+.template-tone {
+  margin: 0 2px 2px;
+  color: var(--ink-faint);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.sticker-error {
+  margin-top: 10px;
+  padding: 11px 14px;
+  color: #f4c4d4;
+  border: 1px solid rgba(240, 166, 202, 0.2);
+  border-radius: 12px;
+  background: rgba(125, 52, 78, 0.14);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.sticker-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 13px;
+}
+
+.sticker-actions .btn {
+  min-width: 0;
+  padding-inline: 14px;
+}
+
+@media (max-width: 410px) {
+  .memory-sticker-screen { padding-inline: 20px; }
+  .sticker-preview-shell { min-height: 342px; }
+  .sticker-preview-image,
+  .sticker-preview-skeleton { width: min(79%, 288px); }
+  .template-card { flex-basis: 108px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sticker-preview-image { animation: none; }
+  .sticker-preview-skeleton::before,
+  .template-artwork-loading::before { animation: none; }
+  .template-card { transition: none; }
+}
