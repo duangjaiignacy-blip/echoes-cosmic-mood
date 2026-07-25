@@ -33,6 +33,7 @@ test('secondary copy is readable while the focused word stays brightest', () => 
 test('pressed controls change color and move with tactile restraint', () => {
   assert.match(css, /\.word-item:active\s*\{[^}]*color:\s*var\(--accent-soft\);[^}]*scale:\s*0\.94/s)
   assert.match(css, /\.chip\.on\s*\{[^}]*color:\s*var\(--accent-soft\)/s)
+  assert.match(css, /\.chip\.on:hover\s*\{[^}]*color:\s*var\(--accent-soft\)/s)
   assert.match(css, /\.back-link:active\s*\{[^}]*color:\s*var\(--accent-soft\);[^}]*scale:\s*0\.97/s)
 })
 

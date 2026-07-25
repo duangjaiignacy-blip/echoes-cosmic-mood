@@ -1361,6 +1361,10 @@ body {
   border-color: rgba(201, 190, 252, 0.46);
 }
 
+.chip.on:hover {
+  color: var(--accent-soft);
+}
+
 .chip:active {
   color: var(--accent-soft);
   scale: 0.97;
