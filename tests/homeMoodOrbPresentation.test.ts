@@ -58,11 +58,21 @@ test('mobile scrolling stays vertical and the single-orb lane does not widen the
 test('the echo confirmation is a short tactile frosted-glass control', () => {
   assert.match(
     css,
-    /\.screen--echo-void \.echo-confirm\s*\{[^}]*align-self:\s*center;[^}]*width:\s*min\(56vw, 280px\);[^}]*backdrop-filter:\s*blur\(22px\) saturate\(150%\);/s,
+    /\.screen--echo-void \.echo-confirm\s*\{[^}]*align-self:\s*center;[^}]*width:\s*min\(52vw, 260px\);[^}]*backdrop-filter:\s*blur\(22px\) saturate\(150%\);/s,
   )
   assert.match(css, /\.screen--echo-void \.echo-confirm::after\s*\{/)
   assert.match(
     css,
     /\.screen--echo-void \.echo-confirm:active\s*\{[^}]*transform:\s*translateY\(1px\) scale\(0\.965\);[^}]*backdrop-filter:\s*blur\(28px\) saturate\(175%\);/s,
   )
+})
+
+test('the glass filter is declared once so the production pipeline can preserve the standard property', () => {
+  const restingRule = css.match(/\.screen--echo-void \.echo-confirm\s*\{([^}]*)\}/s)?.[1] ?? ''
+  const activeRule = css.match(/\.screen--echo-void \.echo-confirm:active\s*\{([^}]*)\}/s)?.[1] ?? ''
+
+  assert.match(restingRule, /backdrop-filter:\s*blur\(22px\) saturate\(150%\);/)
+  assert.match(activeRule, /backdrop-filter:\s*blur\(28px\) saturate\(175%\);/)
+  assert.doesNotMatch(restingRule, /-webkit-backdrop-filter\s*:/)
+  assert.doesNotMatch(activeRule, /-webkit-backdrop-filter\s*:/)
 })
