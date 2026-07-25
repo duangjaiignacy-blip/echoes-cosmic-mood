@@ -13,22 +13,19 @@ test('shader exposes every settings and interaction uniform', () => {
   }
 })
 
-test('fragment shader builds the approved deep starfield and tiny echo vortex', () => {
+test('fragment shader renders a layered starfield without vortex stages', () => {
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float layeredStarField/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float tinyVortex/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float echoStream/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /const float VORTEX_CORE_RADIUS = 0\.018/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /vec2 vortexCenter = vec2\(0\.0, 0\.52\)/)
+  for (const removed of ['tinyVortex', 'spiralDust', 'echoStream', 'vortexCenter', 'VORTEX_CORE_RADIUS']) {
+    assert.doesNotMatch(BLACK_HOLE_FRAGMENT_SHADER, new RegExp(removed))
+  }
 })
 
-test('pointer repulsion affects stars without moving the vortex center', () => {
+test('stars use a larger core, restrained halo, and stronger pointer displacement', () => {
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /const float STAR_SIZE_GAIN = 1\.65/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /const float POINTER_REPULSION_SCALE = 0\.055/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float starCore/)
+  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float starHalo/)
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /layeredStarField\(repelPointer/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /tinyVortex\(uv - vortexCenter/)
-})
-
-test('vortex trails stay dust-softened', () => {
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /float spiralDust/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /spiralDust\(vortexPoint\)/)
 })
 
 test('starfield uses six depth layers with micro dust and irregular density masks', () => {
@@ -60,10 +57,8 @@ test('star layers cycle through restrained depth and ambient rotation', () => {
   )
 })
 
-test('individual stars drift while the vortex keeps fixed coordinates', () => {
+test('individual stars drift without a fixed vortex layer', () => {
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /vec2 stellarDrift/)
   assert.match(BLACK_HOLE_FRAGMENT_SHADER, /local - offset \* 0\.58 - stellarDrift/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /tinyVortex\(uv - vortexCenter\)/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /spiralDust\(vortexPoint\)/)
-  assert.match(BLACK_HOLE_FRAGMENT_SHADER, /echoStream\(vortexPoint\)/)
+  assert.doesNotMatch(BLACK_HOLE_FRAGMENT_SHADER, /vortex/i)
 })

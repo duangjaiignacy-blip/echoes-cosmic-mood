@@ -41,6 +41,18 @@ test('renderer resets pointer activity when the pointer leaves the window', asyn
   assert.match(source, /window\.removeEventListener\('pointerleave', pointerLeave\)/)
 })
 
+test('pointer end and cancellation release the background interaction', async () => {
+  const source = await readFile(
+    new URL('../src/components/blackHoleGalaxyRenderer.ts', import.meta.url),
+    'utf8',
+  )
+
+  for (const type of ['pointerup', 'pointercancel']) {
+    assert.match(source, new RegExp(`window\\.addEventListener\\('${type}', pointerEnd\\)`))
+    assert.match(source, new RegExp(`window\\.removeEventListener\\('${type}', pointerEnd\\)`))
+  }
+})
+
 test('context loss enters the shared terminal failure lifecycle', async () => {
   const source = await readFile(
     new URL('../src/components/blackHoleGalaxyRenderer.ts', import.meta.url),

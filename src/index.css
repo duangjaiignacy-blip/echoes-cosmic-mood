@@ -94,12 +94,11 @@ body {
   opacity: 1;
   transition: opacity 500ms ease;
   background:
-    radial-gradient(circle at 50% 24%, #020204 0 0.9%, rgba(225, 229, 238, 0.82) 1.1%, transparent 2.4%),
-    radial-gradient(ellipse 9% 3.4% at 50% 24%, transparent 22%, rgba(210, 216, 228, 0.5) 34%, rgba(110, 118, 134, 0.16) 58%, transparent 76%),
-    radial-gradient(circle at 24% 31%, rgba(255, 255, 255, 0.75) 0 0.6px, transparent 1px),
-    radial-gradient(circle at 72% 64%, rgba(220, 225, 236, 0.62) 0 0.5px, transparent 1px),
+    radial-gradient(circle at 24% 31%, rgba(255, 255, 255, 0.82) 0 1.2px, transparent 2.8px),
+    radial-gradient(circle at 72% 64%, rgba(220, 225, 236, 0.7) 0 1px, transparent 2.4px),
+    radial-gradient(circle at 48% 18%, rgba(196, 205, 232, 0.48) 0 0.8px, transparent 2px),
     #000;
-  background-size: auto, auto, 31px 37px, 43px 47px, auto;
+  background-size: 61px 67px, 91px 103px, 137px 149px, auto;
 }
 
 .black-hole-galaxy-fallback.is-hidden {

@@ -147,6 +147,10 @@ export function createBlackHoleGalaxyRenderer(
     pointerActiveTarget = 0
   }
 
+  function pointerEnd() {
+    pointerActiveTarget = 0
+  }
+
   function stopRuntime() {
     if (runtimeStopped) return
     runtimeStopped = true
@@ -154,6 +158,8 @@ export function createBlackHoleGalaxyRenderer(
     resizeObserver?.disconnect()
     window.removeEventListener('pointermove', pointerMove)
     window.removeEventListener('pointerleave', pointerLeave)
+    window.removeEventListener('pointerup', pointerEnd)
+    window.removeEventListener('pointercancel', pointerEnd)
     canvas.removeEventListener('webglcontextlost', contextLost)
   }
 
@@ -171,6 +177,8 @@ export function createBlackHoleGalaxyRenderer(
 
   window.addEventListener('pointermove', pointerMove)
   window.addEventListener('pointerleave', pointerLeave)
+  window.addEventListener('pointerup', pointerEnd)
+  window.addEventListener('pointercancel', pointerEnd)
   canvas.addEventListener('webglcontextlost', contextLost)
 
   resizeObserver = typeof ResizeObserver === 'undefined'
