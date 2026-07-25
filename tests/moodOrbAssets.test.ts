@@ -6,6 +6,24 @@ import test from 'node:test'
 import { ECHO_MOODS } from '../src/components/moodEmotionModel.ts'
 import { getMoodOrbAsset, MOOD_ORB_ASSETS } from '../src/components/moodOrbAssets.ts'
 
+const EXPECTED_ASSETS = [
+  ['very-low', '01-very-low-low-heavy-transparent.png', 0],
+  ['low', '01-very-low-low-heavy-transparent.png', 1],
+  ['heavy', '01-very-low-low-heavy-transparent.png', 2],
+  ['calm', '02-calm-okay-bright-transparent.png', 0],
+  ['okay', '02-calm-okay-bright-transparent.png', 1],
+  ['bright', '02-calm-okay-bright-transparent.png', 2],
+  ['joyful', '03-joyful-lonely-sad-transparent.png', 0],
+  ['lonely', '03-joyful-lonely-sad-transparent.png', 1],
+  ['sad', '03-joyful-lonely-sad-transparent.png', 2],
+  ['angry', '04-angry-afraid-disappointed-transparent.png', 0],
+  ['afraid', '04-angry-afraid-disappointed-transparent.png', 1],
+  ['disappointed', '04-angry-afraid-disappointed-transparent.png', 2],
+  ['anxious', '05-anxious-aggrieved-embarrassed-transparent.png', 0],
+  ['aggrieved', '05-anxious-aggrieved-embarrassed-transparent.png', 1],
+  ['embarrassed', '05-anxious-aggrieved-embarrassed-transparent.png', 2],
+] as const
+
 test('mood orb assets follow the canonical mood order exactly once', () => {
   const assetIds = MOOD_ORB_ASSETS.map(({ id }) => id)
   const moodIds = ECHO_MOODS.map(({ id }) => id)
@@ -41,5 +59,21 @@ test('all five referenced sheets are transparent raster files on disk', () => {
 test('getMoodOrbAsset returns the exact registered asset', () => {
   for (const asset of MOOD_ORB_ASSETS) {
     assert.strictEqual(getMoodOrbAsset(asset.id), asset)
+  }
+})
+
+test('every mood is locked to its approved source sheet and panel', () => {
+  for (const [id, basename, panel] of EXPECTED_ASSETS) {
+    const asset = getMoodOrbAsset(id)
+
+    assert.equal(asset.sheet.endsWith(basename), true)
+    assert.equal(asset.panel, panel)
+  }
+})
+
+test('the registry and each registered asset are immutable at runtime', () => {
+  assert.equal(Object.isFrozen(MOOD_ORB_ASSETS), true)
+  for (const asset of MOOD_ORB_ASSETS) {
+    assert.equal(Object.isFrozen(asset), true)
   }
 })
