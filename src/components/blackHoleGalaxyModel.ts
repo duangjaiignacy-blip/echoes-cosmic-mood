@@ -27,7 +27,8 @@ export const BLACK_HOLE_GALAXY_SETTINGS: BlackHoleGalaxySettings = {
 }
 
 export function isBlackHoleGalaxyDemo(search: string): boolean {
-  return new URLSearchParams(search).get('bgDemo') === 'black-hole'
+  const backgroundDemo = new URLSearchParams(search).get('bgDemo')
+  return backgroundDemo === null || backgroundDemo === 'black-hole'
 }
 
 export function capBackgroundDpr(dpr: number): number {

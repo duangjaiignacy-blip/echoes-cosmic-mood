@@ -7,10 +7,10 @@ import {
   normalizePointer,
 } from '../src/components/blackHoleGalaxyModel.ts'
 
-test('demo detection enables only the explicit black-hole query value', () => {
+test('black-hole background is the default and accepts the explicit query value', () => {
+  assert.equal(isBlackHoleGalaxyDemo(''), true)
   assert.equal(isBlackHoleGalaxyDemo('?bgDemo=black-hole'), true)
   assert.equal(isBlackHoleGalaxyDemo('?bgDemo=galaxy'), false)
-  assert.equal(isBlackHoleGalaxyDemo(''), false)
 })
 
 test('settings preserve the supplied Galaxy motion values', () => {
