@@ -5,6 +5,7 @@ import {
   isMoodDragStartAllowed,
   moodPositionFromDrag,
   projectMoodSnap,
+  shouldSuppressMoodClick,
   type MoodDragAxis,
 } from '../components/moodSwipeModel'
 
@@ -41,6 +42,26 @@ export function useMoodSwipe(
     let activePointerId: number | null = null
     let axis: MoodDragAxis | null = null
     let samples: PointerSample[] = []
+    const captureOptions = { capture: true } as const
+    let suppressClick = false
+    let suppressionTimer: number | null = null
+
+    const clearClickSuppression = () => {
+      suppressClick = false
+      if (suppressionTimer !== null) {
+        window.clearTimeout(suppressionTimer)
+        suppressionTimer = null
+      }
+    }
+
+    const armClickSuppression = () => {
+      clearClickSuppression()
+      suppressClick = true
+      suppressionTimer = window.setTimeout(() => {
+        suppressClick = false
+        suppressionTimer = null
+      }, 0)
+    }
 
     const remember = (x: number, y: number, time: number) => {
       samples.push({ x, y, time })
@@ -49,6 +70,7 @@ export function useMoodSwipe(
 
     const down = (event: PointerEvent) => {
       if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return
+      clearClickSuppression()
       const targetPath = event.composedPath().map((target) => (
         target instanceof HTMLElement
           ? {
@@ -68,7 +90,6 @@ export function useMoodSwipe(
       axis = null
       samples = []
       remember(event.clientX, event.clientY, event.timeStamp)
-      element.setPointerCapture(event.pointerId)
       onPositionChangeRef.current(livePosition, 'dragging')
     }
 
@@ -77,7 +98,16 @@ export function useMoodSwipe(
 
       const deltaX = event.clientX - startX
       const deltaY = event.clientY - startY
-      axis ??= chooseMoodDragAxis(deltaX, deltaY)
+      if (axis === null) {
+        axis = chooseMoodDragAxis(deltaX, deltaY)
+        if (axis !== null) {
+          try {
+            element.setPointerCapture(event.pointerId)
+          } catch {
+            /* The window listeners still own the active pointer session. */
+          }
+        }
+      }
       livePosition = moodPositionFromDrag(startPosition, deltaX, deltaY, stepPx, axis)
       remember(event.clientX, event.clientY, event.timeStamp)
       onPositionChangeRef.current(livePosition, 'dragging')
@@ -95,6 +125,7 @@ export function useMoodSwipe(
         : 0
       const velocity = !cancelled && elapsed > 0 ? distance / elapsed : 0
       const target = projectMoodSnap(livePosition, velocity, stepPx)
+      const suppressFollowupClick = shouldSuppressMoodClick(axis, cancelled)
 
       activePointerId = null
       axis = null
@@ -106,20 +137,31 @@ export function useMoodSwipe(
       } catch {
         /* Pointer capture may already be released by the browser. */
       }
+
+      if (suppressFollowupClick) armClickSuppression()
     }
 
     const up = (event: PointerEvent) => finish(event, false)
     const cancel = (event: PointerEvent) => finish(event, true)
+    const suppressDraggedClick = (event: MouseEvent) => {
+      if (!suppressClick) return
+      event.preventDefault()
+      event.stopPropagation()
+      clearClickSuppression()
+    }
 
-    element.addEventListener('pointerdown', down)
-    element.addEventListener('pointermove', move)
-    element.addEventListener('pointerup', up)
-    element.addEventListener('pointercancel', cancel)
+    element.addEventListener('pointerdown', down, captureOptions)
+    element.addEventListener('click', suppressDraggedClick, captureOptions)
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', cancel)
     return () => {
-      element.removeEventListener('pointerdown', down)
-      element.removeEventListener('pointermove', move)
-      element.removeEventListener('pointerup', up)
-      element.removeEventListener('pointercancel', cancel)
+      element.removeEventListener('pointerdown', down, captureOptions)
+      element.removeEventListener('click', suppressDraggedClick, captureOptions)
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', cancel)
+      clearClickSuppression()
     }
   }, [disabled, stepPx])
 

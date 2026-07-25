@@ -5,6 +5,7 @@ import test from 'node:test'
 const home = readFileSync(new URL('../src/pages/Home.tsx', import.meta.url), 'utf8')
 const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
 const carouselUrl = new URL('../src/components/MoodOrbitCarousel.tsx', import.meta.url)
+const moodSwipeUrl = new URL('../src/lib/useMoodSwipe.ts', import.meta.url)
 
 test('echo mode uses the original raster orbit on both chooser steps', () => {
   assert.match(home, /import \{ MoodOrbitCarousel \}/)
@@ -58,16 +59,38 @@ test('pressing the active planet immediately reveals the text-only orbit without
   assert.doesNotMatch(home, /<span aria-hidden="true">[‹›]<\/span>/)
 })
 
-test('the visible planet remains clickable and becomes a drag surface', async () => {
+test('the complete mood dial is one continuous drag surface', async () => {
   const { readFile } = await import('node:fs/promises')
-  const carousel = await readFile(carouselUrl, 'utf8')
+  const [carousel, moodSwipe] = await Promise.all([
+    readFile(carouselUrl, 'utf8'),
+    readFile(moodSwipeUrl, 'utf8'),
+  ])
 
+  assert.match(home, /data-mood-drag-surface=\{echoVoid \? true : undefined\}/)
   assert.match(carousel, /data-mood-drag-surface="true"/)
-  assert.match(carousel, /key=\{activeMood\.id\}/)
-  assert.doesNotMatch(
-    carousel,
-    /const revealOrbit = \([^)]*\) => \{\s*event\.stopPropagation\(\)/s,
+  assert.doesNotMatch(carousel, /stopDrag/)
+  assert.doesNotMatch(carousel, /onPointerDown=\{stopDrag\}/)
+  assert.match(moodSwipe, /const captureOptions = \{ capture: true \} as const/)
+  assert.match(moodSwipe, /addEventListener\('pointerdown', down, captureOptions\)/)
+  assert.match(moodSwipe, /addEventListener\('click', suppressDraggedClick, captureOptions\)/)
+})
+
+test('the dial preserves taps by capturing the pointer only after axis lock', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const moodSwipe = await readFile(moodSwipeUrl, 'utf8')
+  const downBlock = moodSwipe.slice(
+    moodSwipe.indexOf('const down ='),
+    moodSwipe.indexOf('const move ='),
   )
+  const moveBlock = moodSwipe.slice(
+    moodSwipe.indexOf('const move ='),
+    moodSwipe.indexOf('const finish ='),
+  )
+
+  assert.doesNotMatch(downBlock, /setPointerCapture/)
+  assert.match(moveBlock, /setPointerCapture/)
+  assert.match(moodSwipe, /window\.addEventListener\('pointermove', move\)/)
+  assert.match(moodSwipe, /window\.addEventListener\('pointerup', up\)/)
 })
 
 test('dragging visibly energizes the planet and rigid tick ring', () => {
@@ -89,7 +112,6 @@ test('every revealed mood word is a directly selectable button', async () => {
   assert.match(carousel, /<button[\s\S]*className="mood-orbit-text"[\s\S]*aria-pressed=\{index === activeIndex\}/)
   assert.match(carousel, /aria-hidden=\{!textPose\.visible\}/)
   assert.match(carousel, /tabIndex=\{textPose\.visible \? 0 : -1\}/)
-  assert.match(carousel, /onPointerDown=\{stopDrag\}/)
   assert.match(carousel, /onClick=\{\(\) => selectMood\(index\)\}/)
   assert.match(carousel, /const selectMood = \(index: number\) => \{\s*onExpandedChange\(true\)\s*onSelect\(index\)/s)
 })

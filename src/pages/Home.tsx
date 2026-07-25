@@ -152,6 +152,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
             ref={echoVoid ? moodSwipe : feelDial}
             className={`dial ${echoVoid ? 'echo-feel-dial' : ''}`}
             data-mood-swipe={echoVoid ? true : undefined}
+            data-mood-drag-surface={echoVoid ? true : undefined}
             aria-label={echoVoid ? '左右滑动切换此刻的感受' : '旋转选择此刻的感受'}
             role={echoVoid ? 'slider' : undefined}
             tabIndex={echoVoid ? 0 : undefined}

@@ -40,6 +40,13 @@ export function isMoodDragStartAllowed(path: readonly MoodDragTargetDescriptor[]
   ))
 }
 
+export function shouldSuppressMoodClick(
+  axis: MoodDragAxis | null,
+  cancelled: boolean,
+): boolean {
+  return axis !== null && !cancelled
+}
+
 export function wrapMoodIndex(index: number, count: number): number {
   if (!Number.isInteger(count) || count < 1) return 0
   return ((Math.round(index) % count) + count) % count

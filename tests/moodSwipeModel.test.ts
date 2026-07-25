@@ -163,3 +163,17 @@ test('dragging ignores buttons and their nested labels while preserving the caro
   assert.equal(isMoodDragStartAllowed([{ tagName: 'DIV' }, { tagName: 'SECTION' }]), true)
   assert.equal(isMoodDragStartAllowed([{ tagName: 'DIV', isContentEditable: true }]), false)
 })
+
+test('only a completed axis-locked drag suppresses its follow-up click', () => {
+  assert.equal('shouldSuppressMoodClick' in swipeModel, true)
+  const shouldSuppressMoodClick = (
+    swipeModel as typeof swipeModel & {
+      shouldSuppressMoodClick: (axis: 'x' | 'y' | null, cancelled: boolean) => boolean
+    }
+  ).shouldSuppressMoodClick
+
+  assert.equal(shouldSuppressMoodClick(null, false), false)
+  assert.equal(shouldSuppressMoodClick('x', false), true)
+  assert.equal(shouldSuppressMoodClick('y', false), true)
+  assert.equal(shouldSuppressMoodClick('x', true), false)
+})

@@ -1,4 +1,4 @@
-import type { CSSProperties, PointerEvent } from 'react'
+import type { CSSProperties } from 'react'
 
 import type { MoodSwipePhase } from '../lib/useMoodSwipe'
 import { ECHO_MOODS } from './moodEmotionModel'
@@ -29,7 +29,6 @@ export function MoodOrbitCarousel({
   onSelect,
   onExpandedChange,
 }: Props) {
-  const stopDrag = (event: PointerEvent<HTMLButtonElement>) => event.stopPropagation()
   const revealOrbit = () => onExpandedChange(true)
   const activeMood = ECHO_MOODS[activeIndex]
   const pose = orbitalMoodPose(activeIndex, position, ECHO_MOODS.length)
@@ -92,7 +91,6 @@ export function MoodOrbitCarousel({
               aria-hidden={!textPose.visible}
               tabIndex={textPose.visible ? 0 : -1}
               style={textStyle}
-              onPointerDown={stopDrag}
               onClick={() => selectMood(index)}
             >
               {mood.label}
@@ -116,7 +114,6 @@ export function MoodOrbitCarousel({
               aria-label={`选择${mood.label}`}
               aria-pressed={index === activeIndex}
               style={tickStyle}
-              onPointerDown={stopDrag}
               onClick={() => selectMood(index)}
             >
               <span className="sr-only">{mood.label}</span>
