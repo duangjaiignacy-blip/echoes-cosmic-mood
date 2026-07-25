@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import {
   ECHO_MOOD_STEP_PX,
+  isMoodDragStartAllowed,
   moodPositionFromDrag,
   projectMoodSnap,
 } from '../components/moodSwipeModel'
@@ -44,6 +45,12 @@ export function useMoodSwipe(
 
     const down = (event: PointerEvent) => {
       if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return
+      const targetPath = event.composedPath().map((target) => (
+        target instanceof HTMLElement
+          ? { tagName: target.tagName, isContentEditable: target.isContentEditable }
+          : {}
+      ))
+      if (!isMoodDragStartAllowed(targetPath)) return
 
       activePointerId = event.pointerId
       startPosition = positionRef.current

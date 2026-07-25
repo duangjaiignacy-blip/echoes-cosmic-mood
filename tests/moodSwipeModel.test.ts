@@ -8,6 +8,7 @@ import {
   nearestMoodPosition,
   orbitalMoodPose,
   projectMoodSnap,
+  isMoodDragStartAllowed,
   wrapMoodIndex,
 } from '../src/components/moodSwipeModel.ts'
 
@@ -63,4 +64,11 @@ test('orbital poses preserve the center and form lower neighboring steps', () =>
 test('the abrupt impact and bounce timers are no longer public behavior', () => {
   assert.equal('ECHO_MOOD_IMPACT_MS' in swipeModel, false)
   assert.equal('ECHO_MOOD_BOUNCE_MS' in swipeModel, false)
+})
+
+test('dragging ignores buttons and their nested labels while preserving the carousel surface', () => {
+  assert.equal(isMoodDragStartAllowed([{ tagName: 'SPAN' }, { tagName: 'BUTTON' }]), false)
+  assert.equal(isMoodDragStartAllowed([{ tagName: 'A' }, { tagName: 'DIV' }]), false)
+  assert.equal(isMoodDragStartAllowed([{ tagName: 'DIV' }, { tagName: 'SECTION' }]), true)
+  assert.equal(isMoodDragStartAllowed([{ tagName: 'DIV', isContentEditable: true }]), false)
 })

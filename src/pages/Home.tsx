@@ -1,14 +1,10 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useRef, useState, type KeyboardEvent } from 'react'
 import { MoodOrb } from '../components/MoodOrb'
-import {
-  ECHO_MOOD_BOUNCE_MS,
-  ECHO_MOOD_IMPACT_MS,
-  stepMoodIndex,
-  stepMoodLevel,
-  type MoodSwipeDirection,
-} from '../components/moodSwipeModel'
+import { MoodOrbitCarousel } from '../components/MoodOrbitCarousel'
+import { MoodPlanetImage } from '../components/MoodPlanetImage'
+import { activeMoodIndex, nearestMoodPosition } from '../components/moodSwipeModel'
 import { DEFAULT_ECHO_MOOD_INDEX, ECHO_MOODS } from '../components/moodEmotionModel'
-import { useMoodSwipe } from '../lib/useMoodSwipe'
+import { useMoodSwipe, type MoodSwipePhase } from '../lib/useMoodSwipe'
 import { useRotary } from '../lib/useRotary'
 import type { MoodState } from '../types'
 
@@ -25,7 +21,6 @@ const VALENCE_TEXT: Record<number, string> = {
 const WORDS = ['怀念', '想念', '感动', '温暖', '喜悦', '悸动', '释然', '平静', '孤独', '失落', '遗憾', '迷茫']
 
 const DIAL = 300 // 拨盘直径
-const ECHO_ORB_SIZE = 300
 const WORD_R = 136 // 词环半径
 
 interface Props {
@@ -40,16 +35,15 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
 
   /* ---- 第一步：旋转调整整体感受 ---- */
   const [angle, setAngle] = useState(0) // -270..270，每 90° 一档
-  const [echoMoodIndex, setEchoMoodIndex] = useState(DEFAULT_ECHO_MOOD_INDEX)
+  const [echoPosition, setEchoPosition] = useState(DEFAULT_ECHO_MOOD_INDEX)
+  const [echoPhase, setEchoPhase] = useState<MoodSwipePhase | 'idle'>('idle')
   const [pulse, setPulse] = useState(false)
   const prevLevel = useRef(0)
-  const transitionRef = useRef(false)
-  const impactTimerRef = useRef<number | null>(null)
-  const bounceTimerRef = useRef<number | null>(null)
-  const [bounceDirection, setBounceDirection] = useState<MoodSwipeDirection | null>(null)
+  const prevEchoMoodIndex = useRef(DEFAULT_ECHO_MOOD_INDEX)
 
   const valence = angle / 90 // 连续值 -3..3
   const level = Math.max(-3, Math.min(3, Math.round(valence)))
+  const echoMoodIndex = activeMoodIndex(echoPosition, ECHO_MOODS.length)
   const echoMood = ECHO_MOODS[echoMoodIndex]
 
   const feelDial = useRotary((d) => {
@@ -66,45 +60,33 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
     })
   })
 
-  const commitMoodSwipe = (direction: MoodSwipeDirection) => {
-    if (transitionRef.current) return
-    transitionRef.current = true
-    setBounceDirection(direction)
-
-    impactTimerRef.current = window.setTimeout(() => {
-      if (echoVoid) {
-        setEchoMoodIndex((current) => stepMoodIndex(current, direction, ECHO_MOODS.length))
-      } else {
-        setAngle((current) => stepMoodLevel(Math.round(current / 90), direction) * 90)
-      }
+  const updateEchoPosition = (position: number, phase: MoodSwipePhase) => {
+    const nextIndex = activeMoodIndex(position, ECHO_MOODS.length)
+    if (nextIndex !== prevEchoMoodIndex.current) {
+      prevEchoMoodIndex.current = nextIndex
       navigator.vibrate?.(8)
-      setPulse(true)
-    }, ECHO_MOOD_IMPACT_MS)
-
-    bounceTimerRef.current = window.setTimeout(() => {
-      transitionRef.current = false
-      setBounceDirection(null)
-      setPulse(false)
-    }, ECHO_MOOD_BOUNCE_MS)
+    }
+    setEchoPosition(position)
+    setEchoPhase(phase)
   }
 
-  const moodSwipe = useMoodSwipe(commitMoodSwipe, !echoVoid || step !== 'feel')
+  const selectEchoMood = (index: number) => {
+    const nextPosition = nearestMoodPosition(echoPosition, index, ECHO_MOODS.length)
+    updateEchoPosition(nextPosition, 'settling')
+  }
+
+  const moodSwipe = useMoodSwipe(echoPosition, updateEchoPosition, !echoVoid || step !== 'feel')
 
   const handleMoodKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!echoVoid || step !== 'feel') return
     if (event.key === 'ArrowLeft') {
       event.preventDefault()
-      commitMoodSwipe(1)
+      selectEchoMood(echoMoodIndex - 1)
     } else if (event.key === 'ArrowRight') {
       event.preventDefault()
-      commitMoodSwipe(-1)
+      selectEchoMood(echoMoodIndex + 1)
     }
   }
-
-  useEffect(() => () => {
-    if (impactTimerRef.current !== null) window.clearTimeout(impactTimerRef.current)
-    if (bounceTimerRef.current !== null) window.clearTimeout(bounceTimerRef.current)
-  }, [])
 
   /* ---- 第二步：词环旋转选词 ---- */
   const [ringAngle, setRingAngle] = useState(0)
@@ -183,26 +165,18 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
               className="dial-dot"
               style={{ transform: `rotate(${angle}deg) translateY(-${DIAL / 2 - 7}px)` }}
             />
-            <div
-              className={`echo-orb-bounce ${bounceDirection ? 'is-bouncing' : ''}`}
-              data-orb-bounce={bounceDirection ?? 'idle'}
-              style={{
-                position: 'absolute',
-                inset: 0,
-                display: 'grid',
-                placeItems: 'center',
-                pointerEvents: 'none',
-              }}
-            >
-              <MoodOrb
-                valence={echoVoid ? echoMood.valence : valence}
-                size={echoVoid ? ECHO_ORB_SIZE : 188}
-                spin={echoVoid ? echoMoodIndex * 24 : angle * 1.6}
-                pulse={pulse}
-                tone={echoVoid ? 'echo' : 'default'}
-                emotionId={echoVoid ? echoMood.id : undefined}
+            {echoVoid ? (
+              <MoodOrbitCarousel
+                position={echoPosition}
+                activeIndex={echoMoodIndex}
+                phase={echoPhase}
+                onSelect={selectEchoMood}
               />
-            </div>
+            ) : (
+              <div className="dial-orb-center">
+                <MoodOrb valence={valence} size={188} spin={angle * 1.6} pulse={pulse} />
+              </div>
+            )}
           </div>
 
           {echoVoid ? (
@@ -217,7 +191,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
                 <span>{echoMood.label}</span>
                 <span aria-hidden="true">›</span>
               </div>
-              <div className="dial-hint echo-swipe-hint">左右滑动，切换此刻的感受</div>
+              <div className="dial-hint echo-swipe-hint">左右滑动，看看还有哪些感受</div>
             </>
           ) : (
             <>
@@ -256,13 +230,11 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
                 pointerEvents: 'none',
               }}
             >
-              <MoodOrb
-                valence={echoVoid ? echoMood.valence : valence}
-                size={118}
-                spin={ringAngle * 1.4}
-                tone={echoVoid ? 'echo' : 'default'}
-                emotionId={echoVoid ? echoMood.id : undefined}
-              />
+              {echoVoid ? (
+                <MoodPlanetImage className="echo-word-orb" moodId={echoMood.id} size={144} />
+              ) : (
+                <MoodOrb valence={valence} size={118} spin={ringAngle * 1.4} />
+              )}
             </div>
             <div className="word-ring">
               {WORDS.map((w, i) => {

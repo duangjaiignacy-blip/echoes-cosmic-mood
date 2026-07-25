@@ -13,6 +13,20 @@ export interface OrbitalMoodPose {
   zIndex: number
 }
 
+export interface MoodDragTargetDescriptor {
+  readonly tagName?: string
+  readonly isContentEditable?: boolean
+}
+
+const INTERACTIVE_MOOD_TAGS = new Set(['a', 'button', 'input', 'label', 'select', 'textarea'])
+
+export function isMoodDragStartAllowed(path: readonly MoodDragTargetDescriptor[]): boolean {
+  return !path.some((target) => (
+    target.isContentEditable === true
+    || (target.tagName ? INTERACTIVE_MOOD_TAGS.has(target.tagName.toLowerCase()) : false)
+  ))
+}
+
 export function wrapMoodIndex(index: number, count: number): number {
   if (!Number.isInteger(count) || count < 1) return 0
   return ((Math.round(index) % count) + count) % count
