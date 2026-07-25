@@ -2,7 +2,13 @@ import type { CSSProperties } from 'react'
 
 import type { MoodId } from '../types'
 import { ECHO_MOODS } from './moodEmotionModel'
-import { getMoodOrbAsset, moodOrbSheetLeftPercent } from './moodOrbAssets'
+import {
+  getMoodOrbAsset,
+  MOOD_ORB_SHEET_PANEL_COUNT,
+  MOOD_ORB_VIEWPORT_HEIGHT,
+  MOOD_ORB_VIEWPORT_WIDTH,
+  moodOrbSheetLeftPercent,
+} from './moodOrbAssets'
 
 export interface MoodPlanetImageProps {
   moodId: MoodId
@@ -30,7 +36,7 @@ export function MoodPlanetImage({
         position: 'relative',
         display: 'inline-block',
         width: size,
-        aspectRatio: '1748 / 2700',
+        aspectRatio: `${MOOD_ORB_VIEWPORT_WIDTH} / ${MOOD_ORB_VIEWPORT_HEIGHT}`,
         overflow: 'hidden',
         lineHeight: 0,
       }}
@@ -44,7 +50,7 @@ export function MoodPlanetImage({
           top: 0,
           left: `${moodOrbSheetLeftPercent(asset)}%`,
           display: 'block',
-          width: '300%',
+          width: `${MOOD_ORB_SHEET_PANEL_COUNT * 100}%`,
           height: '100%',
           maxWidth: 'none',
         }}
