@@ -25,6 +25,7 @@ const VALENCE_TEXT: Record<number, string> = {
 const WORDS = ['怀念', '想念', '感动', '温暖', '喜悦', '悸动', '释然', '平静', '孤独', '失落', '遗憾', '迷茫']
 
 const DIAL = 300 // 拨盘直径
+const ECHO_ORB_SIZE = 300
 const WORD_R = 136 // 词环半径
 
 interface Props {
@@ -195,7 +196,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
             >
               <MoodOrb
                 valence={echoVoid ? echoMood.valence : valence}
-                size={188}
+                size={echoVoid ? ECHO_ORB_SIZE : 188}
                 spin={echoVoid ? echoMoodIndex * 24 : angle * 1.6}
                 pulse={pulse}
                 tone={echoVoid ? 'echo' : 'default'}

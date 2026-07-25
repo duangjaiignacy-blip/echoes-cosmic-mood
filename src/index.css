@@ -449,7 +449,7 @@ body {
 /* ---------- 可爱宇宙情绪表情层 ---------- */
 .corb[data-orb-mood] .corb-canvas,
 .corb[data-orb-mood] .corb-fallback {
-  filter: brightness(1.35) saturate(0.72);
+  filter: brightness(1.08) saturate(1.02) contrast(1.04);
 }
 
 .mood-expression {
@@ -472,35 +472,39 @@ body {
 }
 
 .mood-stroke {
-  color: color-mix(in srgb, var(--mood-ink) 84%, white);
+  color: #071a4a;
   stroke: currentColor;
-  stroke-width: 2.55;
+  stroke-width: 3.2;
   stroke-linecap: round;
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0.7px 0.7px rgba(244, 242, 255, 0.72));
 }
 
 .mood-stroke--hand {
-  color: color-mix(in srgb, var(--mood-ink) 84%, white);
-  stroke-width: 2.35;
+  color: #071a4a;
+  stroke-width: 3.05;
 }
 
 .mood-stroke--accent {
   color: var(--mood-accent);
-  stroke-width: 1.85;
-  opacity: 0.84;
+  stroke-width: 2.45;
+  opacity: 0.96;
+  filter: drop-shadow(0 0 2px currentColor);
 }
 
 .mood-stroke--tear {
   color: color-mix(in srgb, var(--mood-accent) 72%, white);
-  stroke-width: 1.7;
-  opacity: 0.92;
+  stroke-width: 2.15;
+  opacity: 0.98;
+  filter: drop-shadow(0 0 2px currentColor);
 }
 
 .mood-stroke--blush {
   color: var(--mood-blush);
-  stroke-width: 2;
-  opacity: 0.92;
+  stroke-width: 2.65;
+  opacity: 1;
+  filter: drop-shadow(0 0 1.4px rgba(255, 210, 226, 0.45));
 }
 
 .mood-expression__face,
@@ -510,9 +514,14 @@ body {
   transform-origin: center;
 }
 
-.mood-expression__face,
+.mood-expression__face {
+  translate: 0 5px;
+  scale: 1.2;
+}
+
 .mood-expression__hands {
   translate: 0 4px;
+  scale: 1.12;
 }
 
 .mood-expression--sink .mood-expression__accents { animation: mood-marks-fall 6.8s ease-in-out infinite; }
@@ -759,6 +768,14 @@ body {
   margin-top: 108px !important;
   touch-action: none;
   cursor: ew-resize;
+}
+
+.echo-feel-dial:focus-visible {
+  outline: none;
+}
+
+.echo-feel-dial:focus-visible .dial-ring {
+  filter: drop-shadow(0 0 8px rgba(214, 221, 244, 0.38));
 }
 
 .screen--echo-void .dial-ring {

@@ -25,12 +25,16 @@ uniform float uStarDensity;
 uniform float uLightBias;
 uniform float uTurbulence;
 uniform float uMoodPulse;
-const float STAR_RADIUS = 0.105;
+const float STAR_RADIUS = 0.072;
 
 float hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
   p += dot(p, p + 45.32);
   return fract(p.x * p.y);
+}
+
+vec2 hash22(vec2 p) {
+  return vec2(hash21(p + vec2(17.7, 3.1)), hash21(p + vec2(4.9, 31.6)));
 }
 
 float hash31(vec3 p) {
@@ -87,6 +91,56 @@ float starLayer(vec2 uv, float scale, float threshold) {
   return star * (0.5 + 1.4 * hash21(cell + 4.1));
 }
 
+float stellarDust(vec2 uv) {
+  float densityBias = (uStarDensity - 1.0) * 0.055;
+  float dust = starLayer(uv, 38.0, 0.70 - densityBias);
+  dust += starLayer(uv + vec2(11.7, 7.3), 76.0, 0.90 - densityBias * 0.55) * 0.72;
+  dust += starLayer(uv - vec2(5.1, 13.9), 118.0, 0.97 - densityBias * 0.24) * 0.48;
+  return dust * (0.62 + uStarDensity * 0.38);
+}
+
+float cellularVeins(vec2 uv) {
+  vec2 cell = floor(uv);
+  vec2 local = fract(uv);
+  float nearest = 8.0;
+  float secondNearest = 8.0;
+
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 neighbor = vec2(float(x), float(y));
+      vec2 feature = neighbor + hash22(cell + neighbor);
+      float distanceToFeature = length(feature - local);
+      if (distanceToFeature < nearest) {
+        secondNearest = nearest;
+        nearest = distanceToFeature;
+      } else if (distanceToFeature < secondNearest) {
+        secondNearest = distanceToFeature;
+      }
+    }
+  }
+
+  return 1.0 - smoothstep(0.018, 0.095, secondNearest - nearest);
+}
+
+float cloudBoundary(vec2 point) {
+  vec2 flow = uNebulaFlow * uTime * 0.025;
+  float cloud = fbm(vec3(point * vec2(3.3, 4.1) + flow, uTime * 0.022));
+  float sphereArc = pow(abs(point.x), 1.7) * 0.28;
+  return -0.52 + sphereArc + uLightBias * 0.18 + (cloud - 0.5) * (0.28 + uTurbulence * 0.08);
+}
+
+float cloudShelf(vec2 point) {
+  float boundary = cloudBoundary(point);
+  return 1.0 - smoothstep(boundary, boundary + 0.16, point.y);
+}
+
+float cloudRim(vec2 point) {
+  vec2 flow = uNebulaFlow * uTime * 0.025;
+  float cloud = fbm(vec3(point * vec2(3.3, 4.1) + flow, uTime * 0.022));
+  float boundary = cloudBoundary(point);
+  return exp(-abs(point.y - boundary) * 19.0) * (0.72 + cloud * 0.42);
+}
+
 mat2 rotation(float angle) {
   float sine = sin(angle);
   float cosine = cos(angle);
@@ -114,14 +168,14 @@ void main() {
   vec2 corePoint = rotated.xy - vec2(-0.12, 0.04 + uLightBias);
   float core = galaxyCore(corePoint);
   vec2 starUv = rotated.xy / max(0.28, 0.42 + rotated.z);
-  float stars = starLayer(starUv + uTime * 0.0015, 24.0, 0.88 - (uStarDensity - 1.0) * 0.055);
-  stars += starLayer(starUv - uTime * 0.001, 53.0, 0.965 - (uStarDensity - 1.0) * 0.025) * 0.75;
-  stars *= 0.65 + uStarDensity * 0.35;
+  float stars = stellarDust(starUv + uTime * 0.0008);
+  float veins = cellularVeins(starUv * 5.4 + uNebulaFlow * uTime * 0.004);
+  float shelf = cloudShelf(p);
+  float shelfRim = cloudRim(p);
 
-  vec3 cosmicMain = mix(uColorMain, vec3(uColorLight.r, uColorDeep.g * 0.25, uColorLight.b), 0.48);
-  cosmicMain.g *= 0.82;
-  vec3 cosmicDeep = uColorDeep * vec3(0.55, 0.32, 0.82);
-  vec3 cosmicLight = mix(uColorLight, vec3(1.0, 0.72, 1.0), 0.25);
+  vec3 cosmicMain = mix(uColorMain, uColorLight, 0.24);
+  vec3 cosmicDeep = mix(uColorDeep, uColorMain * 0.64, 0.28);
+  vec3 cosmicLight = mix(uColorLight, vec3(1.0), 0.38);
   vec3 silverMain = mix(vec3(0.40, 0.42, 0.47), uColorMain, 0.16);
   vec3 silverDeep = mix(vec3(0.075, 0.085, 0.11), uColorDeep, 0.12);
   vec3 silverLight = mix(vec3(0.72, 0.75, 0.82), uColorLight, 0.18);
@@ -129,10 +183,13 @@ void main() {
   cosmicDeep = mix(cosmicDeep, silverDeep, uSilverTone);
   cosmicLight = mix(cosmicLight, silverLight, uSilverTone);
 
-  vec3 color = cosmicDeep * (0.10 + density * 0.34);
-  color += cosmicMain * density * 0.72;
-  color += cosmicLight * (core * 0.95 + stars * 1.35);
-  color += cosmicLight * uPulse * (0.12 + core * 0.35);
+  vec3 color = mix(cosmicDeep, cosmicMain, 0.46 + z * 0.28) * (0.32 + z * 0.24);
+  color += cosmicMain * (0.05 + density * 0.36);
+  color += cosmicLight * (core * 0.28 + stars * 1.18);
+  color += cosmicLight * veins * (0.022 + density * 0.032 + shelfRim * 0.05);
+  color += cosmicMain * (shelf * 0.10 + shelfRim * 0.34);
+  color += cosmicLight * (shelf * 0.025 + shelfRim * 0.28);
+  color += cosmicLight * uPulse * (0.08 + core * 0.18);
   float moodBreath = 0.5 + 0.5 * sin(uTime * (0.55 + uMoodPulse));
   color += cosmicLight * uMoodPulse * moodBreath * (0.035 + core * 0.08);
 
@@ -147,11 +204,10 @@ void main() {
   vec3 lightDirection = normalize(vec3(-0.48, 0.62, 0.62));
   float specular = pow(max(dot(normal, lightDirection), 0.0), 54.0);
   float softReflection = pow(max(dot(normal, normalize(vec3(-0.62, 0.34, 0.71))), 0.0), 8.0);
-  color += vec3(1.0, 0.98, 1.0) * specular * 1.15;
-  color += cosmicLight * softReflection * 0.18;
-  color += mix(cosmicMain, cosmicLight, 0.55) * fresnel * 0.24;
-  color *= 0.82 + z * 0.2;
-  color *= 1.0 - max(0.0, -p.y) * 0.18;
+  color += vec3(1.0, 0.98, 1.0) * specular * 0.82;
+  color += cosmicLight * softReflection * 0.12;
+  color += mix(cosmicMain, cosmicLight, 0.64) * fresnel * 0.48;
+  color *= 0.91 + z * 0.14;
 
   gl_FragColor = vec4(color, edgeAlpha);
 }

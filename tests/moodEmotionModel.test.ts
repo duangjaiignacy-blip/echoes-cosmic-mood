@@ -70,6 +70,20 @@ test('every mood has valid colors, required geometry, and a declared motion', ()
   }
 })
 
+test('every mood uses the same deep navy expression ink as the approved reference', () => {
+  for (const mood of ECHO_MOODS) {
+    assert.equal(mood.ink, '#071a4a', `${mood.id} expression ink`)
+  }
+})
+
+test('calm matches the approved soft lavender planet and keeps readable finger gestures', () => {
+  const calm = getMoodVisual('calm')
+  assert.deepEqual(calm.palette, ['#d9bfd8', '#887393', '#f5ddec'])
+  for (const hand of calm.hands) {
+    assert.ok((hand.d.match(/M/g) ?? []).length >= 4, 'calm hands include palm and finger details')
+  }
+})
+
 test('every expression signature is unique and every stroke has path data', () => {
   const signatures = new Set<string>()
 

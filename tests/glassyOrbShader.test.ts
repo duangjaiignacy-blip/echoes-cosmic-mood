@@ -23,6 +23,11 @@ test('shader drives internal flow, density, light position, turbulence, and mood
 test('fragment shader contains nebula, stars, Fresnel glass, and prismatic rim stages', () => {
   assert.match(FRAGMENT_SHADER, /float nebulaDensity/)
   assert.match(FRAGMENT_SHADER, /float starLayer/)
+  assert.match(FRAGMENT_SHADER, /float stellarDust/)
+  assert.match(FRAGMENT_SHADER, /float cellularVeins/)
+  assert.match(FRAGMENT_SHADER, /float cloudShelf/)
+  assert.match(FRAGMENT_SHADER, /float cloudBoundary/)
+  assert.match(FRAGMENT_SHADER, /float cloudRim/)
   assert.match(FRAGMENT_SHADER, /float fresnel/)
   assert.match(FRAGMENT_SHADER, /vec3 prism/)
 })
@@ -43,6 +48,19 @@ test('shader keeps the galactic core compact at mood-orb scale', () => {
   assert.match(FRAGMENT_SHADER, /exp\(-72\.0/)
 })
 
-test('shader keeps stars visible at the 188px product size', () => {
-  assert.match(FRAGMENT_SHADER, /const float STAR_RADIUS = 0\.105/)
+test('shader uses fine star sand instead of oversized light dots', () => {
+  assert.match(FRAGMENT_SHADER, /const float STAR_RADIUS = 0\.072/)
+  assert.match(FRAGMENT_SHADER, /stellarDust\(starUv/)
+  assert.match(FRAGMENT_SHADER, /cellularVeins\(starUv \* 5\.4/)
+})
+
+test('shader preserves each mood palette without forcing every orb toward purple', () => {
+  assert.doesNotMatch(FRAGMENT_SHADER, /uColorDeep\.g \* 0\.25/)
+  assert.match(FRAGMENT_SHADER, /mix\(uColorMain, uColorLight, 0\.24\)/)
+})
+
+test('lower cloud shelf stays palette-tinted instead of blowing out to solid white', () => {
+  assert.match(FRAGMENT_SHADER, /pow\(abs\(point\.x\), 1\.7\) \* 0\.28/)
+  assert.match(FRAGMENT_SHADER, /cosmicMain \* \(shelf \* 0\.10 \+ shelfRim \* 0\.34\)/)
+  assert.match(FRAGMENT_SHADER, /cosmicLight \* \(shelf \* 0\.025 \+ shelfRim \* 0\.28\)/)
 })

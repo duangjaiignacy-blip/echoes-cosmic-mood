@@ -26,3 +26,13 @@ test('expression styling is crisp, pointer inert, motion-safe, and never ellipti
   const bounce = css.match(/@keyframes echo-orb-drop\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
   assert.doesNotMatch(bounce, /scale\([^)]*,/)
 })
+
+test('expression styling matches the readable navy hand-drawn reference treatment', () => {
+  assert.match(css, /filter:\s*brightness\(1\.08\) saturate\(1\.02\) contrast\(1\.04\)/)
+  assert.match(css, /\.mood-stroke\s*\{[^}]*color:\s*#071a4a/s)
+  assert.match(css, /\.mood-stroke\s*\{[^}]*stroke-width:\s*3\.2/s)
+  assert.match(css, /\.mood-stroke--hand\s*\{[^}]*stroke-width:\s*3\.05/s)
+  assert.match(css, /\.mood-expression__face\s*\{[^}]*scale:\s*1\.2/s)
+  assert.match(css, /\.mood-expression__hands\s*\{[^}]*scale:\s*1\.12/s)
+  assert.match(css, /\.mood-stroke--accent\s*\{[^}]*stroke-width:\s*2\.45/s)
+})
