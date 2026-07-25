@@ -20,7 +20,7 @@ test('the orbit exposes all fifteen fixed mood controls', async () => {
   assert.match(carousel, /ECHO_MOODS\.map/)
   assert.match(carousel, /className="mood-orbit-step"/)
   assert.match(carousel, /aria-label=\{`选择\$\{mood\.label\}`\}/)
-  assert.match(carousel, /const ORB_VIEWPORT_SIZE = 348/)
+  assert.match(carousel, /const ORB_VIEWPORT_SIZE = 244/)
 })
 
 test('the orbit renders only the active mood artwork', async () => {
@@ -53,4 +53,16 @@ test('echo mode removes the abrupt bounce transition contract', () => {
 test('mobile scrolling stays vertical and the single-orb lane does not widen the page', () => {
   assert.match(css, /\.screen-scroll\s*\{[^}]*overflow-x:\s*hidden;[^}]*overscroll-behavior-x:\s*none;/s)
   assert.match(css, /\.mood-orbit-lane\s*\{[^}]*inset:\s*-120px 0;/s)
+})
+
+test('the echo confirmation is a short tactile frosted-glass control', () => {
+  assert.match(
+    css,
+    /\.screen--echo-void \.echo-confirm\s*\{[^}]*align-self:\s*center;[^}]*width:\s*min\(56vw, 280px\);[^}]*backdrop-filter:\s*blur\(22px\) saturate\(150%\);/s,
+  )
+  assert.match(css, /\.screen--echo-void \.echo-confirm::after\s*\{/)
+  assert.match(
+    css,
+    /\.screen--echo-void \.echo-confirm:active\s*\{[^}]*transform:\s*translateY\(1px\) scale\(0\.965\);[^}]*backdrop-filter:\s*blur\(28px\) saturate\(175%\);/s,
+  )
 })

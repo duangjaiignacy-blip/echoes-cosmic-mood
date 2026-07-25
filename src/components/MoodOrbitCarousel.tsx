@@ -5,7 +5,7 @@ import { ECHO_MOODS } from './moodEmotionModel'
 import { MoodPlanetImage } from './MoodPlanetImage'
 import { orbitalMoodPose } from './moodSwipeModel'
 
-const ORB_VIEWPORT_SIZE = 348
+const ORB_VIEWPORT_SIZE = 244
 
 interface Props {
   position: number
