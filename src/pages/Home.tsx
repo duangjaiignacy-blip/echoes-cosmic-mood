@@ -9,6 +9,7 @@ import {
   getMoodDescriptorWords,
   moodPolarity,
 } from '../components/moodTaxonomyModel'
+import { triggerTapHaptic } from '../lib/haptics'
 import { useMoodSwipe, type MoodSwipePhase } from '../lib/useMoodSwipe'
 import { useRotary } from '../lib/useRotary'
 import type { MoodState } from '../types'
@@ -140,8 +141,18 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
     return best
   })()
 
-  const toggleWord = (w: string) =>
-    setLabels((prev) => (prev.includes(w) ? prev.filter((x) => x !== w) : prev.length < 3 ? [...prev, w] : prev))
+  const toggleWord = (word: string) => {
+    const next = labels.includes(word)
+      ? labels.filter((label) => label !== word)
+      : labels.length < 3
+        ? [...labels, word]
+        : labels
+
+    if (next !== labels) {
+      triggerTapHaptic()
+      setLabels(next)
+    }
+  }
 
   return (
     <div className={`screen screen-scroll ${echoVoid ? 'screen--echo-void' : ''}`}>
@@ -278,14 +289,16 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
                   .filter(Boolean)
                   .join(' ')
                 return (
-                  <span
+                  <button
+                    type="button"
                     key={w}
                     className={cls}
                     style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }}
+                    aria-pressed={labels.includes(w)}
                     onClick={() => toggleWord(w)}
                   >
                     {w}
-                  </span>
+                  </button>
                 )
               })}
             </div>

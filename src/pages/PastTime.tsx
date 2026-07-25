@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { triggerTapHaptic } from '../lib/haptics'
 
 const PRESETS = [
   '昨天',
@@ -44,9 +45,12 @@ export function PastTime({ onNext, onBack }: Props) {
       <div className="chips" style={{ marginBottom: 28 }}>
         {PRESETS.map((p) => (
           <button
+            type="button"
             key={p}
             className={`chip ${picked === p && !custom.trim() ? 'on' : ''}`}
+            aria-pressed={picked === p && !custom.trim()}
             onClick={() => {
+              triggerTapHaptic()
               setPicked(p)
               setCustom('')
             }}
