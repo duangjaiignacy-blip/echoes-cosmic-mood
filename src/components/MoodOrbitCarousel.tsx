@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import type { MoodSwipePhase } from '../lib/useMoodSwipe'
 import { ECHO_MOODS } from './moodEmotionModel'
 import { MoodPlanetImage } from './MoodPlanetImage'
+import { getMoodTaxonomyPosition } from './moodTaxonomyModel'
 import {
   moodOrbitTextPose,
   moodTickAngle,
@@ -69,13 +70,14 @@ export function MoodOrbitCarousel({
       <div className="mood-orbit-texts" aria-live="off">
         {ECHO_MOODS.map((mood, index) => {
           const textPose = moodOrbitTextPose(index, position, ECHO_MOODS.length, expanded)
+          const taxonomyPosition = getMoodTaxonomyPosition(mood.id)
           const textStyle: CSSProperties = {
             opacity: textPose.opacity,
             transform: [
               'translate(-50%, -50%)',
-              `rotate(${textPose.angle}deg)`,
-              'translateY(-174px)',
-              `rotate(${-textPose.angle}deg)`,
+              `rotate(${taxonomyPosition.angle}deg)`,
+              `translateY(-${taxonomyPosition.radius}px)`,
+              `rotate(${-taxonomyPosition.angle}deg)`,
               `scale(${textPose.scale})`,
             ].join(' '),
           }
@@ -86,6 +88,8 @@ export function MoodOrbitCarousel({
               className="mood-orbit-text"
               data-active={index === activeIndex ? true : undefined}
               data-visible={textPose.visible ? true : undefined}
+              data-polarity={taxonomyPosition.polarity}
+              data-orbit-side={taxonomyPosition.side}
               aria-label={`选择${mood.label}`}
               aria-pressed={index === activeIndex}
               aria-hidden={!textPose.visible}
