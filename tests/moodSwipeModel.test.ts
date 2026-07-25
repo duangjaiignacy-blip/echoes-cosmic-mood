@@ -4,12 +4,14 @@ import test from 'node:test'
 import * as swipeModel from '../src/components/moodSwipeModel.ts'
 import {
   activeMoodIndex,
-  chooseMoodDragAxis,
-  ECHO_MOOD_AXIS_LOCK_PX,
   ECHO_MOOD_MAX_FLING_STEPS,
+  ECHO_MOOD_MIN_TRACKING_RADIUS_PX,
   ECHO_MOOD_ORBIT_TRAVEL_PX,
-  ECHO_MOOD_STEP_PX,
-  moodPositionFromDrag,
+  ECHO_MOOD_PROJECTION_MS,
+  ECHO_MOOD_ROTARY_LOCK_PX,
+  moodPointerAngle,
+  moodPositionFromRotation,
+  moodRotationTravelPx,
   nearestMoodPosition,
   moodOrbitTextPose,
   moodTickAngle,
@@ -17,6 +19,7 @@ import {
   orbitalMoodPose,
   projectMoodSnap,
   isMoodDragStartAllowed,
+  shortestMoodAngleDelta,
   wrapMoodIndex,
 } from '../src/components/moodSwipeModel.ts'
 
@@ -85,14 +88,37 @@ test('continuous positions wrap and activate at the nearest half-step', () => {
   assert.equal(activeMoodIndex(3.51, 15), 4)
 })
 
-test('short horizontal and vertical swipes move through moods after the axis locks', () => {
-  assert.equal(ECHO_MOOD_STEP_PX, 28)
-  assert.equal(ECHO_MOOD_AXIS_LOCK_PX, 6)
-  assert.equal(chooseMoodDragAxis(5, 1), null)
-  assert.equal(chooseMoodDragAxis(-14, 4), 'x')
-  assert.equal(chooseMoodDragAxis(3, -14), 'y')
-  assert.equal(moodPositionFromDrag(3, -56, 0, 28, 'x'), 5)
-  assert.equal(moodPositionFromDrag(3, 0, -56, 28, 'y'), 5)
+test('pointer angles follow the dial center in clockwise screen coordinates', () => {
+  assert.equal(moodPointerAngle(110, 100, 100, 100), 0)
+  assert.equal(moodPointerAngle(100, 110, 100, 100), 90)
+  assert.equal(moodPointerAngle(90, 100, 100, 100), 180)
+  assert.equal(moodPointerAngle(100, 90, 100, 100), -90)
+})
+
+test('angle deltas unwrap continuously while crossing the ±180 degree seam', () => {
+  const angles = [170, 179, -179, -160]
+  const rotation = angles.slice(1).reduce(
+    (total, angle, index) => total + shortestMoodAngleDelta(angles[index], angle),
+    0,
+  )
+
+  assert.equal(shortestMoodAngleDelta(179, -179), 2)
+  assert.equal(shortestMoodAngleDelta(-179, 179), -2)
+  assert.equal(rotation, 30)
+})
+
+test('one circular tick of pointer rotation advances one mood without discontinuity', () => {
+  assert.equal(moodPositionFromRotation(3, 24, 15), 2)
+  assert.equal(moodPositionFromRotation(3, -48, 15), 5)
+  assert.equal(moodPositionFromRotation(14, -24, 15), 15)
+})
+
+test('rotary lock uses physical arc travel and ignores the unstable dial center', () => {
+  assert.equal(ECHO_MOOD_ROTARY_LOCK_PX, 6)
+  assert.equal(ECHO_MOOD_MIN_TRACKING_RADIUS_PX, 28)
+  assert.ok(moodRotationTravelPx(3, 120) > ECHO_MOOD_ROTARY_LOCK_PX)
+  assert.ok(moodRotationTravelPx(2, 120) < ECHO_MOOD_ROTARY_LOCK_PX)
+  assert.equal(moodRotationTravelPx(30, 0), 0)
 })
 
 test('fixed mood controls choose the nearest copy on the circular track', () => {
@@ -101,11 +127,13 @@ test('fixed mood controls choose the nearest copy on the circular track', () => 
   assert.equal(nearestMoodPosition(31, 1, 15), 31)
 })
 
-test('release velocity adds at most one extra step at the direct swipe sensitivity', () => {
-  assert.equal(ECHO_MOOD_MAX_FLING_STEPS, 1)
-  assert.equal(projectMoodSnap(4.1, -4, 28, 160), 5)
-  assert.equal(projectMoodSnap(4.1, 4, 28, 160), 3)
-  assert.equal(projectMoodSnap(4.6, 0, 28, 160), 5)
+test('release velocity projects in the rotation direction, caps momentum, and snaps', () => {
+  assert.equal(ECHO_MOOD_PROJECTION_MS, 140)
+  assert.equal(ECHO_MOOD_MAX_FLING_STEPS, 2)
+  assert.equal(projectMoodSnap(4.1, 0.04), 6)
+  assert.equal(projectMoodSnap(4.1, -0.04), 2)
+  assert.equal(projectMoodSnap(4.1, 0.005), 5)
+  assert.equal(projectMoodSnap(4.4, 0), 4)
 })
 
 test('orbital poses expose only the current mood', () => {
@@ -164,16 +192,15 @@ test('dragging ignores buttons and their nested labels while preserving the caro
   assert.equal(isMoodDragStartAllowed([{ tagName: 'DIV', isContentEditable: true }]), false)
 })
 
-test('only a completed axis-locked drag suppresses its follow-up click', () => {
+test('only a completed rotary-locked drag suppresses its follow-up click', () => {
   assert.equal('shouldSuppressMoodClick' in swipeModel, true)
   const shouldSuppressMoodClick = (
     swipeModel as typeof swipeModel & {
-      shouldSuppressMoodClick: (axis: 'x' | 'y' | null, cancelled: boolean) => boolean
+      shouldSuppressMoodClick: (rotated: boolean, cancelled: boolean) => boolean
     }
   ).shouldSuppressMoodClick
 
-  assert.equal(shouldSuppressMoodClick(null, false), false)
-  assert.equal(shouldSuppressMoodClick('x', false), true)
-  assert.equal(shouldSuppressMoodClick('y', false), true)
-  assert.equal(shouldSuppressMoodClick('x', true), false)
+  assert.equal(shouldSuppressMoodClick(false, false), false)
+  assert.equal(shouldSuppressMoodClick(true, false), true)
+  assert.equal(shouldSuppressMoodClick(true, true), false)
 })

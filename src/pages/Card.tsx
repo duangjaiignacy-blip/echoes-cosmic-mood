@@ -11,12 +11,29 @@ export function Card({ entry, onDone }: Props) {
   const [url, setUrl] = useState<string | null>(null)
 
   useEffect(() => {
+    let active = true
+    const controller = new AbortController()
+    setUrl(null)
+
     // 等字体就绪后渲染，避免卡片字体回退
-    const run = () => setUrl(renderCard(entry))
-    if (document.fonts?.ready) {
-      document.fonts.ready.then(run).catch(run)
-    } else {
-      run()
+    const run = async () => {
+      try {
+        if (document.fonts?.ready) {
+          await document.fonts.ready.catch(() => undefined)
+        }
+        const nextUrl = await renderCard(entry, { signal: controller.signal })
+        if (active) setUrl(nextUrl)
+      } catch (error) {
+        if (active && !(error instanceof DOMException && error.name === 'AbortError')) {
+          console.error('[Card] 贴纸渲染失败', error)
+        }
+      }
+    }
+    void run()
+
+    return () => {
+      active = false
+      controller.abort()
     }
   }, [entry])
 

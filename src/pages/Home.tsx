@@ -3,7 +3,12 @@ import { MoodOrb } from '../components/MoodOrb'
 import { MoodOrbitCarousel } from '../components/MoodOrbitCarousel'
 import { MoodPlanetImage } from '../components/MoodPlanetImage'
 import { activeMoodIndex, nearestMoodPosition } from '../components/moodSwipeModel'
-import { DEFAULT_ECHO_MOOD_INDEX, ECHO_MOODS } from '../components/moodEmotionModel'
+import {
+  DEFAULT_ECHO_SELECTOR_INDEX,
+  ECHO_SELECTOR_MOODS,
+  getMoodDescriptorWords,
+  moodPolarity,
+} from '../components/moodTaxonomyModel'
 import { useMoodSwipe, type MoodSwipePhase } from '../lib/useMoodSwipe'
 import { useRotary } from '../lib/useRotary'
 import type { MoodState } from '../types'
@@ -17,8 +22,6 @@ const VALENCE_TEXT: Record<number, string> = {
   [2]: '明亮',
   [3]: '雀跃',
 }
-
-const WORDS = ['怀念', '想念', '感动', '温暖', '喜悦', '悸动', '释然', '平静', '孤独', '失落', '遗憾', '迷茫']
 
 const DIAL = 300 // 拨盘直径
 const WORD_R = 136 // 词环半径
@@ -35,17 +38,24 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
 
   /* ---- 第一步：旋转调整整体感受 ---- */
   const [angle, setAngle] = useState(0) // -270..270，每 90° 一档
-  const [echoPosition, setEchoPosition] = useState(DEFAULT_ECHO_MOOD_INDEX)
+  const [echoPosition, setEchoPosition] = useState(DEFAULT_ECHO_SELECTOR_INDEX)
   const [echoPhase, setEchoPhase] = useState<MoodSwipePhase | 'idle'>('idle')
-  const [orbitExpanded, setOrbitExpanded] = useState(false)
+  const [orbitExpanded, setOrbitExpanded] = useState(true)
   const [pulse, setPulse] = useState(false)
   const prevLevel = useRef(0)
-  const prevEchoMoodIndex = useRef(DEFAULT_ECHO_MOOD_INDEX)
+  const prevEchoMoodIndex = useRef(DEFAULT_ECHO_SELECTOR_INDEX)
 
   const valence = angle / 90 // 连续值 -3..3
   const level = Math.max(-3, Math.min(3, Math.round(valence)))
-  const echoMoodIndex = activeMoodIndex(echoPosition, ECHO_MOODS.length)
-  const echoMood = ECHO_MOODS[echoMoodIndex]
+  const echoMoodIndex = activeMoodIndex(echoPosition, ECHO_SELECTOR_MOODS.length)
+  const echoMood = ECHO_SELECTOR_MOODS[echoMoodIndex]
+  const selectedMood = {
+    valence: echoVoid ? echoMood.valence : level,
+    ...(echoVoid ? { emotionId: echoMood.id } : {}),
+  }
+  const descriptorWords = getMoodDescriptorWords(selectedMood)
+  const descriptorPolarity = moodPolarity(selectedMood)
+  const wordStepAngle = 360 / descriptorWords.length
 
   const feelDial = useRotary((d) => {
     setAngle((a) => {
@@ -54,6 +64,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
       if (lv !== prevLevel.current) {
         prevLevel.current = lv
         navigator.vibrate?.(8)
+        setLabels([])
         setPulse(true)
         setTimeout(() => setPulse(false), 450)
       }
@@ -62,10 +73,11 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
   })
 
   const updateEchoPosition = (position: number, phase: MoodSwipePhase) => {
-    const nextIndex = activeMoodIndex(position, ECHO_MOODS.length)
+    const nextIndex = activeMoodIndex(position, ECHO_SELECTOR_MOODS.length)
     if (nextIndex !== prevEchoMoodIndex.current) {
       prevEchoMoodIndex.current = nextIndex
       navigator.vibrate?.(8)
+      setLabels([])
     }
     setEchoPosition(position)
     setEchoPhase(phase)
@@ -73,20 +85,25 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
 
   const selectEchoMood = (index: number) => {
     setOrbitExpanded(true)
-    const nextPosition = nearestMoodPosition(echoPosition, index, ECHO_MOODS.length)
+    const nextPosition = nearestMoodPosition(echoPosition, index, ECHO_SELECTOR_MOODS.length)
     updateEchoPosition(nextPosition, 'settling')
   }
 
-  const moodSwipe = useMoodSwipe(echoPosition, updateEchoPosition, !echoVoid || step !== 'feel')
+  const moodSwipe = useMoodSwipe(
+    echoPosition,
+    updateEchoPosition,
+    ECHO_SELECTOR_MOODS.length,
+    !echoVoid || step !== 'feel',
+  )
 
   const handleMoodKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (!echoVoid || step !== 'feel') return
     if (event.key === 'ArrowLeft') {
       event.preventDefault()
-      selectEchoMood(echoMoodIndex - 1)
+      selectEchoMood(echoMoodIndex + 1)
     } else if (event.key === 'ArrowRight') {
       event.preventDefault()
-      selectEchoMood(echoMoodIndex + 1)
+      selectEchoMood(echoMoodIndex - 1)
     }
   }
 
@@ -103,7 +120,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
     () => {
       // 松手后吸附到最近的词位
       setSmooth(true)
-      setRingAngle((a) => Math.round(a / 30) * 30)
+      setRingAngle((a) => Math.round(a / wordStepAngle) * wordStepAngle)
     },
   )
 
@@ -112,8 +129,8 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
   const focusIdx = (() => {
     let best = 0
     let bestDiff = 361
-    for (let i = 0; i < WORDS.length; i++) {
-      const a = norm(i * 30 - 90 + ringAngle)
+    for (let i = 0; i < descriptorWords.length; i++) {
+      const a = norm(i * wordStepAngle - 90 + ringAngle)
       const diff = Math.min(Math.abs(a - 270), 360 - Math.abs(a - 270))
       if (diff < bestDiff) {
         bestDiff = diff
@@ -153,15 +170,14 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
             className={`dial ${echoVoid ? 'echo-feel-dial' : ''}`}
             data-mood-swipe={echoVoid ? true : undefined}
             data-mood-drag-surface={echoVoid ? true : undefined}
-            aria-label={echoVoid ? '左右滑动切换此刻的感受' : '旋转选择此刻的感受'}
+            aria-label={echoVoid ? '沿圆环旋转切换此刻的感受' : '旋转选择此刻的感受'}
             role={echoVoid ? 'slider' : undefined}
             tabIndex={echoVoid ? 0 : undefined}
             aria-valuemin={echoVoid ? 1 : undefined}
-            aria-valuemax={echoVoid ? ECHO_MOODS.length : undefined}
+            aria-valuemax={echoVoid ? ECHO_SELECTOR_MOODS.length : undefined}
             aria-valuenow={echoVoid ? echoMoodIndex + 1 : undefined}
             aria-valuetext={echoVoid ? echoMood.label : undefined}
             onKeyDown={handleMoodKeyDown}
-            onPointerDown={echoVoid ? () => setOrbitExpanded(true) : undefined}
             style={{ width: DIAL, height: DIAL, marginTop: 26 }}
           >
             <div className="dial-ring" />
@@ -196,7 +212,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
                 <span>{echoMood.label}</span>
               </div>
               <div className="dial-hint echo-swipe-hint">
-                {orbitExpanded ? '点击任意情绪，直接切换' : '点击或按住圆环，显示全部情绪'}
+                沿圆环旋转，或点击任意情绪直接切换
               </div>
             </>
           ) : (
@@ -226,7 +242,13 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
           </div>
 
           {/* 词环拨盘 */}
-          <div ref={wordDial} className="dial" style={{ width: DIAL + 60, height: DIAL + 60, marginTop: 30 }}>
+          <div
+            ref={wordDial}
+            className="dial"
+            data-descriptor-polarity={descriptorPolarity}
+            data-selected-mood-id={selectedMood.emotionId}
+            style={{ width: DIAL + 60, height: DIAL + 60, marginTop: 30 }}
+          >
             <div
               style={{
                 position: 'absolute',
@@ -243,8 +265,8 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
               )}
             </div>
             <div className="word-ring">
-              {WORDS.map((w, i) => {
-                const a = ((i * 30 - 90 + ringAngle) * Math.PI) / 180
+              {descriptorWords.map((w, i) => {
+                const a = ((i * wordStepAngle - 90 + ringAngle) * Math.PI) / 180
                 const x = Math.cos(a) * WORD_R
                 const y = Math.sin(a) * WORD_R
                 const cls = [
@@ -285,9 +307,9 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
           <button
             className="btn btn-primary"
             onClick={() => onNext({
-              valence: echoVoid ? echoMood.valence : level,
+              valence: selectedMood.valence,
               labels,
-              ...(echoVoid ? { emotionId: echoMood.id } : {}),
+              ...(selectedMood.emotionId ? { emotionId: selectedMood.emotionId } : {}),
             })}
           >
             继续

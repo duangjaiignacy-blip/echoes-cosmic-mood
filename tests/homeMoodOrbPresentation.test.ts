@@ -14,11 +14,11 @@ test('echo mode uses the original raster orbit on both chooser steps', () => {
   assert.match(home, /<MoodPlanetImage[\s\S]*moodId=\{echoMood\.id\}/)
 })
 
-test('the orbit exposes all fifteen fixed mood controls', async () => {
+test('the orbit exposes the seven level-selector mood controls', async () => {
   const { readFile } = await import('node:fs/promises')
   const carousel = await readFile(carouselUrl, 'utf8')
 
-  assert.match(carousel, /ECHO_MOODS\.map/)
+  assert.match(carousel, /ECHO_SELECTOR_MOODS\.map/)
   assert.match(carousel, /className="mood-orbit-step"/)
   assert.match(carousel, /className="mood-orbit-text"/)
   assert.match(carousel, /aria-label=\{`选择\$\{mood\.label\}`\}/)
@@ -31,16 +31,16 @@ test('the orbit renders only the active mood artwork', async () => {
   const { readFile } = await import('node:fs/promises')
   const carousel = await readFile(carouselUrl, 'utf8')
 
-  assert.match(carousel, /const activeMood = ECHO_MOODS\[activeIndex\]/)
+  assert.match(carousel, /const activeMood = ECHO_SELECTOR_MOODS\[activeIndex\]/)
   assert.match(carousel, /<MoodPlanetImage moodId=\{activeMood\.id\}/)
 })
 
-test('the home screen owns the collapsed and expanded tick-ring state', () => {
-  assert.match(home, /const \[orbitExpanded, setOrbitExpanded\] = useState\(false\)/)
+test('the complete mood vocabulary is visible on first render', () => {
+  assert.match(home, /const \[orbitExpanded, setOrbitExpanded\] = useState\(true\)/)
   assert.match(home, /expanded=\{orbitExpanded\}/)
   assert.match(home, /onExpandedChange=\{setOrbitExpanded\}/)
-  assert.match(home, /onPointerDown=\{echoVoid \? \(\) => setOrbitExpanded\(true\) : undefined\}/)
-  assert.match(home, /orbitExpanded \? '点击任意情绪，直接切换' : '点击或按住圆环，显示全部情绪'/)
+  assert.match(home, /沿圆环旋转，或点击任意情绪直接切换/)
+  assert.doesNotMatch(home, /点击或按住圆环，显示全部情绪/)
 })
 
 test('pressing the active planet immediately reveals the text-only orbit without arrows', async () => {
@@ -75,22 +75,36 @@ test('the complete mood dial is one continuous drag surface', async () => {
   assert.match(moodSwipe, /addEventListener\('click', suppressDraggedClick, captureOptions\)/)
 })
 
-test('the dial preserves taps by capturing the pointer only after axis lock', async () => {
+test('the dial follows circular pointer angles and captures only after rotary lock', async () => {
   const { readFile } = await import('node:fs/promises')
   const moodSwipe = await readFile(moodSwipeUrl, 'utf8')
   const downBlock = moodSwipe.slice(
     moodSwipe.indexOf('const down ='),
-    moodSwipe.indexOf('const move ='),
+    moodSwipe.indexOf('const track ='),
   )
-  const moveBlock = moodSwipe.slice(
-    moodSwipe.indexOf('const move ='),
+  const trackBlock = moodSwipe.slice(
+    moodSwipe.indexOf('const track ='),
     moodSwipe.indexOf('const finish ='),
   )
 
   assert.doesNotMatch(downBlock, /setPointerCapture/)
-  assert.match(moveBlock, /setPointerCapture/)
+  assert.match(trackBlock, /moodPointerAngle/)
+  assert.match(trackBlock, /shortestMoodAngleDelta/)
+  assert.match(trackBlock, /moodRotationTravelPx/)
+  assert.match(trackBlock, /setPointerCapture/)
+  assert.match(trackBlock, /getCoalescedEvents/)
   assert.match(moodSwipe, /window\.addEventListener\('pointermove', move\)/)
   assert.match(moodSwipe, /window\.addEventListener\('pointerup', up\)/)
+})
+
+test('release uses a recent angular velocity window for projection and snapping', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const moodSwipe = await readFile(moodSwipeUrl, 'utf8')
+
+  assert.match(moodSwipe, /const VELOCITY_WINDOW_MS = 100/)
+  assert.match(moodSwipe, /rotationVelocity/)
+  assert.match(moodSwipe, /positionVelocity/)
+  assert.match(moodSwipe, /projectMoodSnap\(livePosition, positionVelocity\)/)
 })
 
 test('dragging visibly energizes the planet and rigid tick ring', () => {

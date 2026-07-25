@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { MoodOrb } from '../components/MoodOrb'
+import { MoodPlanetImage } from '../components/MoodPlanetImage'
 import type { MoodState } from '../types'
 
 interface Props {
@@ -26,7 +27,11 @@ export function NowNote({ mood, onSave, onBack }: Props) {
         </p>
       </div>
 
-      <MoodOrb valence={mood.valence} emotionId={mood.emotionId} size={120} />
+      {mood.emotionId ? (
+        <MoodPlanetImage moodId={mood.emotionId} size={120} />
+      ) : (
+        <MoodOrb valence={mood.valence} size={120} />
+      )}
 
       <textarea
         className="note-input"

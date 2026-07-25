@@ -1,11 +1,10 @@
 export type MoodSwipeDirection = -1 | 1
-export type MoodDragAxis = 'x' | 'y'
 
-export const ECHO_MOOD_STEP_PX = 28
-export const ECHO_MOOD_AXIS_LOCK_PX = 6
+export const ECHO_MOOD_ROTARY_LOCK_PX = 6
+export const ECHO_MOOD_MIN_TRACKING_RADIUS_PX = 28
 export const ECHO_MOOD_ORBIT_TRAVEL_PX = 116
-export const ECHO_MOOD_PROJECTION_MS = 160
-export const ECHO_MOOD_MAX_FLING_STEPS = 1
+export const ECHO_MOOD_PROJECTION_MS = 140
+export const ECHO_MOOD_MAX_FLING_STEPS = 2
 
 export interface OrbitalMoodPose {
   visible: boolean
@@ -41,10 +40,10 @@ export function isMoodDragStartAllowed(path: readonly MoodDragTargetDescriptor[]
 }
 
 export function shouldSuppressMoodClick(
-  axis: MoodDragAxis | null,
+  rotated: boolean,
   cancelled: boolean,
 ): boolean {
-  return axis !== null && !cancelled
+  return rotated && !cancelled
 }
 
 export function wrapMoodIndex(index: number, count: number): number {
@@ -56,24 +55,34 @@ export function activeMoodIndex(position: number, count: number): number {
   return wrapMoodIndex(Math.round(position), count)
 }
 
-export function chooseMoodDragAxis(
-  deltaX: number,
-  deltaY: number,
-  lockPx = ECHO_MOOD_AXIS_LOCK_PX,
-): MoodDragAxis | null {
-  if (Math.hypot(deltaX, deltaY) < lockPx) return null
-  return Math.abs(deltaX) >= Math.abs(deltaY) ? 'x' : 'y'
+/** Screen-space polar angle; positive movement is clockwise. */
+export function moodPointerAngle(
+  x: number,
+  y: number,
+  centerX: number,
+  centerY: number,
+): number {
+  return Math.atan2(y - centerY, x - centerX) * (180 / Math.PI)
 }
 
-export function moodPositionFromDrag(
+/** Unwraps the ±180° seam so one circular gesture remains continuous. */
+export function shortestMoodAngleDelta(fromDegrees: number, toDegrees: number): number {
+  const delta = ((toDegrees - fromDegrees + 540) % 360) - 180
+  return delta === -180 ? 180 : delta
+}
+
+export function moodPositionFromRotation(
   startPosition: number,
-  deltaX: number,
-  deltaY: number,
-  stepPx = ECHO_MOOD_STEP_PX,
-  axis: MoodDragAxis | null = chooseMoodDragAxis(deltaX, deltaY),
+  rotationDegrees: number,
+  count: number,
 ): number {
-  if (!axis || stepPx <= 0) return startPosition
-  return startPosition - (axis === 'x' ? deltaX : deltaY) / stepPx
+  if (!Number.isInteger(count) || count < 1) return startPosition
+  return startPosition - rotationDegrees / (360 / count)
+}
+
+export function moodRotationTravelPx(rotationDegrees: number, radiusPx: number): number {
+  if (!Number.isFinite(radiusPx) || radiusPx <= 0) return 0
+  return Math.abs(rotationDegrees) * (Math.PI / 180) * radiusPx
 }
 
 export function nearestMoodPosition(position: number, targetIndex: number, count: number): number {
@@ -123,13 +132,11 @@ export function moodOrbitTextPose(
 
 export function projectMoodSnap(
   position: number,
-  velocityPxPerMs: number,
-  stepPx = ECHO_MOOD_STEP_PX,
+  velocityStepsPerMs: number,
   projectionMs = ECHO_MOOD_PROJECTION_MS,
   maxSteps = ECHO_MOOD_MAX_FLING_STEPS,
 ): number {
-  if (stepPx <= 0) return Math.round(position)
-  const projectedSteps = (-velocityPxPerMs * projectionMs) / stepPx
+  const projectedSteps = velocityStepsPerMs * projectionMs
   const boundedSteps = Math.max(-Math.abs(maxSteps), Math.min(Math.abs(maxSteps), projectedSteps))
   return Math.round(position + boundedSteps)
 }

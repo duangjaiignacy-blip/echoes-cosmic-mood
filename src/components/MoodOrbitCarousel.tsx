@@ -1,8 +1,8 @@
 import type { CSSProperties } from 'react'
 
 import type { MoodSwipePhase } from '../lib/useMoodSwipe'
-import { ECHO_MOODS } from './moodEmotionModel'
 import { MoodPlanetImage } from './MoodPlanetImage'
+import { ECHO_SELECTOR_MOODS, polarityFromValence } from './moodTaxonomyModel'
 import {
   moodOrbitTextPose,
   moodTickAngle,
@@ -30,8 +30,8 @@ export function MoodOrbitCarousel({
   onExpandedChange,
 }: Props) {
   const revealOrbit = () => onExpandedChange(true)
-  const activeMood = ECHO_MOODS[activeIndex]
-  const pose = orbitalMoodPose(activeIndex, position, ECHO_MOODS.length)
+  const activeMood = ECHO_SELECTOR_MOODS[activeIndex]
+  const pose = orbitalMoodPose(activeIndex, position, ECHO_SELECTOR_MOODS.length)
   const style: CSSProperties = {
     opacity: pose.opacity,
     zIndex: pose.zIndex,
@@ -67,8 +67,8 @@ export function MoodOrbitCarousel({
       </button>
 
       <div className="mood-orbit-texts" aria-live="off">
-        {ECHO_MOODS.map((mood, index) => {
-          const textPose = moodOrbitTextPose(index, position, ECHO_MOODS.length, expanded)
+        {ECHO_SELECTOR_MOODS.map((mood, index) => {
+          const textPose = moodOrbitTextPose(index, position, ECHO_SELECTOR_MOODS.length, expanded)
           const textStyle: CSSProperties = {
             opacity: textPose.opacity,
             transform: [
@@ -86,6 +86,7 @@ export function MoodOrbitCarousel({
               className="mood-orbit-text"
               data-active={index === activeIndex ? true : undefined}
               data-visible={textPose.visible ? true : undefined}
+              data-polarity={polarityFromValence(mood.valence)}
               aria-label={`选择${mood.label}`}
               aria-pressed={index === activeIndex}
               aria-hidden={!textPose.visible}
@@ -100,10 +101,10 @@ export function MoodOrbitCarousel({
       </div>
 
       <div className="mood-orbit-steps" aria-label="全部情绪">
-        {ECHO_MOODS.map((mood, index) => {
+        {ECHO_SELECTOR_MOODS.map((mood, index) => {
           const tickStyle: CSSProperties = {
-            opacity: moodTickOpacity(index, position, ECHO_MOODS.length),
-            transform: `translate(-50%, -50%) rotate(${moodTickAngle(index, position, ECHO_MOODS.length)}deg) translateY(-143px)`,
+            opacity: moodTickOpacity(index, position, ECHO_SELECTOR_MOODS.length),
+            transform: `translate(-50%, -50%) rotate(${moodTickAngle(index, position, ECHO_SELECTOR_MOODS.length)}deg) translateY(-143px)`,
           }
           return (
             <button

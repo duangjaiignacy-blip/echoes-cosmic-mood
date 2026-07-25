@@ -7,6 +7,10 @@ export interface MoodOrbAsset {
   readonly focusOffsetPercent: -11 | 0 | 11
 }
 
+export const MOOD_ORB_SHEET_PANEL_COUNT = 3
+export const MOOD_ORB_VIEWPORT_WIDTH = 1748
+export const MOOD_ORB_VIEWPORT_HEIGHT = 2700
+
 const PANEL_FOCUS_OFFSETS = [-11, 0, 11] as const
 
 function moodOrbAsset(id: MoodId, sheet: string, panel: 0 | 1 | 2): Readonly<MoodOrbAsset> {

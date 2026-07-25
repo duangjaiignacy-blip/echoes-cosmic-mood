@@ -917,6 +917,18 @@ body {
   pointer-events: auto;
 }
 
+.mood-orbit-text[data-polarity='negative'] {
+  color: rgba(194, 205, 229, 0.82);
+}
+
+.mood-orbit-text[data-polarity='positive'] {
+  color: rgba(241, 220, 190, 0.86);
+}
+
+.mood-orbit-text[data-polarity='neutral'] {
+  color: rgba(231, 230, 236, 0.9);
+}
+
 .mood-orbit-text[data-active] {
   color: rgba(240, 241, 246, 0.94);
   font-size: 28px;
