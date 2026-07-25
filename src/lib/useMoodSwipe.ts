@@ -1,29 +1,31 @@
 import { useEffect, useRef } from 'react'
 import {
-  chooseMoodDragAxis,
-  ECHO_MOOD_STEP_PX,
+  ECHO_MOOD_MIN_TRACKING_RADIUS_PX,
+  ECHO_MOOD_ROTARY_LOCK_PX,
   isMoodDragStartAllowed,
-  moodPositionFromDrag,
+  moodPointerAngle,
+  moodPositionFromRotation,
+  moodRotationTravelPx,
   projectMoodSnap,
+  shortestMoodAngleDelta,
   shouldSuppressMoodClick,
-  type MoodDragAxis,
 } from '../components/moodSwipeModel'
+import { ECHO_MOODS } from '../components/moodEmotionModel'
 
 export type MoodSwipePhase = 'dragging' | 'settling'
 
 interface PointerSample {
-  x: number
-  y: number
+  rotation: number
   time: number
 }
 
-const VELOCITY_WINDOW_MS = 80
+const VELOCITY_WINDOW_MS = 100
 
 export function useMoodSwipe(
   position: number,
   onPositionChange: (position: number, phase: MoodSwipePhase) => void,
   disabled = false,
-  stepPx = ECHO_MOOD_STEP_PX,
+  count = ECHO_MOODS.length,
 ) {
   const ref = useRef<HTMLDivElement>(null)
   const positionRef = useRef(position)
@@ -36,11 +38,14 @@ export function useMoodSwipe(
     if (!element || disabled) return
 
     let startPosition = positionRef.current
-    let startX = 0
-    let startY = 0
     let livePosition = startPosition
     let activePointerId: number | null = null
-    let axis: MoodDragAxis | null = null
+    let centerX = 0
+    let centerY = 0
+    let lastAngle: number | null = null
+    let accumulatedRotation = 0
+    let trackingRadius = ECHO_MOOD_MIN_TRACKING_RADIUS_PX
+    let rotated = false
     let samples: PointerSample[] = []
     const captureOptions = { capture: true } as const
     let suppressClick = false
@@ -63,8 +68,8 @@ export function useMoodSwipe(
       }, 0)
     }
 
-    const remember = (x: number, y: number, time: number) => {
-      samples.push({ x, y, time })
+    const remember = (rotation: number, time: number) => {
+      samples.push({ rotation, time })
       samples = samples.filter((sample) => time - sample.time <= VELOCITY_WINDOW_MS)
     }
 
@@ -85,50 +90,80 @@ export function useMoodSwipe(
       activePointerId = event.pointerId
       startPosition = positionRef.current
       livePosition = startPosition
-      startX = event.clientX
-      startY = event.clientY
-      axis = null
+      const bounds = element.getBoundingClientRect()
+      centerX = bounds.left + bounds.width / 2
+      centerY = bounds.top + bounds.height / 2
+      trackingRadius = Math.hypot(event.clientX - centerX, event.clientY - centerY)
+      lastAngle = trackingRadius >= ECHO_MOOD_MIN_TRACKING_RADIUS_PX
+        ? moodPointerAngle(event.clientX, event.clientY, centerX, centerY)
+        : null
+      accumulatedRotation = 0
+      rotated = false
       samples = []
-      remember(event.clientX, event.clientY, event.timeStamp)
+      remember(0, event.timeStamp)
       onPositionChangeRef.current(livePosition, 'dragging')
+    }
+
+    const track = (event: PointerEvent, emit: boolean) => {
+      const radius = Math.hypot(event.clientX - centerX, event.clientY - centerY)
+      if (radius < ECHO_MOOD_MIN_TRACKING_RADIUS_PX) return
+
+      const angle = moodPointerAngle(event.clientX, event.clientY, centerX, centerY)
+      if (lastAngle === null) {
+        lastAngle = angle
+        trackingRadius = radius
+        remember(accumulatedRotation, event.timeStamp)
+        return
+      }
+
+      accumulatedRotation += shortestMoodAngleDelta(lastAngle, angle)
+      lastAngle = angle
+      trackingRadius = Math.max(ECHO_MOOD_MIN_TRACKING_RADIUS_PX, (trackingRadius + radius) / 2)
+      remember(accumulatedRotation, event.timeStamp)
+
+      if (!rotated && moodRotationTravelPx(accumulatedRotation, trackingRadius) >= ECHO_MOOD_ROTARY_LOCK_PX) {
+        rotated = true
+        try {
+          element.setPointerCapture(event.pointerId)
+        } catch {
+          /* The window listeners still own the active pointer session. */
+        }
+      }
+
+      if (rotated) {
+        livePosition = moodPositionFromRotation(startPosition, accumulatedRotation, count)
+        if (emit) onPositionChangeRef.current(livePosition, 'dragging')
+      }
     }
 
     const move = (event: PointerEvent) => {
       if (event.pointerId !== activePointerId) return
-
-      const deltaX = event.clientX - startX
-      const deltaY = event.clientY - startY
-      if (axis === null) {
-        axis = chooseMoodDragAxis(deltaX, deltaY)
-        if (axis !== null) {
-          try {
-            element.setPointerCapture(event.pointerId)
-          } catch {
-            /* The window listeners still own the active pointer session. */
-          }
-        }
-      }
-      livePosition = moodPositionFromDrag(startPosition, deltaX, deltaY, stepPx, axis)
-      remember(event.clientX, event.clientY, event.timeStamp)
-      onPositionChangeRef.current(livePosition, 'dragging')
+      const coalescedEvents = event.getCoalescedEvents?.()
+      const pointerEvents = coalescedEvents?.length ? coalescedEvents : [event]
+      for (const pointerEvent of pointerEvents) track(pointerEvent, true)
+      if (rotated) event.preventDefault()
     }
 
     const finish = (event: PointerEvent, cancelled: boolean) => {
       if (event.pointerId !== activePointerId) return
 
-      if (!cancelled) remember(event.clientX, event.clientY, event.timeStamp)
+      if (!cancelled) track(event, false)
       const first = samples.at(0)
       const last = samples.at(-1)
       const elapsed = first && last ? last.time - first.time : 0
-      const distance = first && last
-        ? axis === 'y' ? last.y - first.y : last.x - first.x
+      const rotationVelocity = first && last && elapsed > 0
+        ? (last.rotation - first.rotation) / elapsed
         : 0
-      const velocity = !cancelled && elapsed > 0 ? distance / elapsed : 0
-      const target = projectMoodSnap(livePosition, velocity, stepPx)
-      const suppressFollowupClick = shouldSuppressMoodClick(axis, cancelled)
+      const positionVelocity = rotated && !cancelled && count > 0
+        ? -rotationVelocity / (360 / count)
+        : 0
+      const target = projectMoodSnap(livePosition, positionVelocity)
+      const suppressFollowupClick = shouldSuppressMoodClick(rotated, cancelled)
 
       activePointerId = null
-      axis = null
+      lastAngle = null
+      accumulatedRotation = 0
+      rotated = false
       samples = []
       onPositionChangeRef.current(target, 'settling')
 
@@ -163,7 +198,7 @@ export function useMoodSwipe(
       window.removeEventListener('pointercancel', cancel)
       clearClickSuppression()
     }
-  }, [disabled, stepPx])
+  }, [count, disabled])
 
   return ref
 }

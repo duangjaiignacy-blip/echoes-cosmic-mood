@@ -37,7 +37,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
   const [angle, setAngle] = useState(0) // -270..270，每 90° 一档
   const [echoPosition, setEchoPosition] = useState(DEFAULT_ECHO_MOOD_INDEX)
   const [echoPhase, setEchoPhase] = useState<MoodSwipePhase | 'idle'>('idle')
-  const [orbitExpanded, setOrbitExpanded] = useState(false)
+  const [orbitExpanded, setOrbitExpanded] = useState(true)
   const [pulse, setPulse] = useState(false)
   const prevLevel = useRef(0)
   const prevEchoMoodIndex = useRef(DEFAULT_ECHO_MOOD_INDEX)
@@ -153,7 +153,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
             className={`dial ${echoVoid ? 'echo-feel-dial' : ''}`}
             data-mood-swipe={echoVoid ? true : undefined}
             data-mood-drag-surface={echoVoid ? true : undefined}
-            aria-label={echoVoid ? '左右滑动切换此刻的感受' : '旋转选择此刻的感受'}
+            aria-label={echoVoid ? '沿圆环旋转切换此刻的感受' : '旋转选择此刻的感受'}
             role={echoVoid ? 'slider' : undefined}
             tabIndex={echoVoid ? 0 : undefined}
             aria-valuemin={echoVoid ? 1 : undefined}
@@ -161,7 +161,6 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
             aria-valuenow={echoVoid ? echoMoodIndex + 1 : undefined}
             aria-valuetext={echoVoid ? echoMood.label : undefined}
             onKeyDown={handleMoodKeyDown}
-            onPointerDown={echoVoid ? () => setOrbitExpanded(true) : undefined}
             style={{ width: DIAL, height: DIAL, marginTop: 26 }}
           >
             <div className="dial-ring" />
@@ -196,7 +195,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
                 <span>{echoMood.label}</span>
               </div>
               <div className="dial-hint echo-swipe-hint">
-                {orbitExpanded ? '点击任意情绪，直接切换' : '点击或按住圆环，显示全部情绪'}
+                沿圆环旋转，或点击任意情绪直接切换
               </div>
             </>
           ) : (
