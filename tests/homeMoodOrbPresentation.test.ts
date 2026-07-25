@@ -118,24 +118,38 @@ test('mobile scrolling stays vertical and the single-orb lane does not widen the
   assert.match(css, /\.mood-orbit-lane\s*\{[^}]*inset:\s*-120px 0;/s)
 })
 
-test('the echo confirmation is a short tactile frosted-glass control', () => {
+test('the echo confirmation reads as transparent dark glass over the starfield', () => {
   assert.match(
     css,
-    /\.screen--echo-void \.echo-confirm\s*\{[^}]*align-self:\s*center;[^}]*width:\s*min\(52vw, 260px\);[^}]*backdrop-filter:\s*blur\(22px\) saturate\(150%\);/s,
+    /\.screen--echo-void \.echo-confirm\s*\{[^}]*align-self:\s*center;[^}]*width:\s*min\(52vw, 260px\);[^}]*border-color:\s*rgba\(222, 229, 242, 0\.38\);[^}]*background:\s*rgba\(12, 15, 23, 0\.3\);[^}]*backdrop-filter:\s*blur\(30px\) saturate\(165%\) brightness\(82%\);/s,
   )
-  assert.match(css, /\.screen--echo-void \.echo-confirm::after\s*\{/)
   assert.match(
     css,
-    /\.screen--echo-void \.echo-confirm:active\s*\{[^}]*transform:\s*translateY\(1px\) scale\(0\.965\);[^}]*backdrop-filter:\s*blur\(28px\) saturate\(175%\);/s,
+    /\.screen--echo-void \.echo-confirm\s*\{[^}]*box-shadow:[^}]*inset 0 1px 0 rgba\(255, 255, 255, 0\.34\)[^}]*inset 0 -1px 0 rgba\(2, 5, 11, 0\.58\)[^}]*0 14px 34px rgba\(0, 0, 0, 0\.44\)/s,
+  )
+  assert.match(css, /\.screen--echo-void \.echo-confirm::before\s*\{[^}]*pointer-events:\s*none;[^}]*box-shadow:/s)
+  assert.match(css, /\.screen--echo-void \.echo-confirm::after\s*\{[^}]*pointer-events:\s*none;[^}]*animation:\s*echo-glass-sheen 7\.5s/s)
+})
+
+test('the dark-glass control has restrained hover, tactile press, and motion-safe sheen', () => {
+  assert.match(css, /\.screen--echo-void \.echo-confirm:hover\s*\{[^}]*border-color:\s*rgba\(235, 240, 250, 0\.5\);/s)
+  assert.match(
+    css,
+    /\.screen--echo-void \.echo-confirm:active\s*\{[^}]*transform:\s*translateY\(1px\) scale\(0\.965\);[^}]*backdrop-filter:\s*blur\(34px\) saturate\(175%\) brightness\(88%\);/s,
+  )
+  assert.match(css, /@keyframes echo-glass-sheen\s*\{/)
+  assert.match(
+    css,
+    /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.screen--echo-void \.echo-confirm::before,[\s\S]*\.screen--echo-void \.echo-confirm::after\s*\{[^}]*animation:\s*none;[^}]*transition:\s*none;/s,
   )
 })
 
-test('the glass filter is declared once so the production pipeline can preserve the standard property', () => {
+test('the glass filter stays standard-property-only in the component override', () => {
   const restingRule = css.match(/\.screen--echo-void \.echo-confirm\s*\{([^}]*)\}/s)?.[1] ?? ''
   const activeRule = css.match(/\.screen--echo-void \.echo-confirm:active\s*\{([^}]*)\}/s)?.[1] ?? ''
 
-  assert.match(restingRule, /backdrop-filter:\s*blur\(22px\) saturate\(150%\);/)
-  assert.match(activeRule, /backdrop-filter:\s*blur\(28px\) saturate\(175%\);/)
+  assert.match(restingRule, /backdrop-filter:\s*blur\(30px\) saturate\(165%\) brightness\(82%\);/)
+  assert.match(activeRule, /backdrop-filter:\s*blur\(34px\) saturate\(175%\) brightness\(88%\);/)
   assert.doesNotMatch(restingRule, /-webkit-backdrop-filter\s*:/)
   assert.doesNotMatch(activeRule, /-webkit-backdrop-filter\s*:/)
 })
