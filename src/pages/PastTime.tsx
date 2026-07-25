@@ -61,8 +61,7 @@ export function PastTime({ onNext, onBack }: Props) {
       </div>
 
       <input
-        className="note-input"
-        style={{ minHeight: 0, padding: '16px 20px' }}
+        className="note-input past-time-input"
         placeholder="或者用自己的话描述，比如「高三的雨季」"
         value={custom}
         onChange={(e) => setCustom(e.target.value)}

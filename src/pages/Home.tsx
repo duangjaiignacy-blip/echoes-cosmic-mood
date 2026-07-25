@@ -36,6 +36,7 @@ interface Props {
 
 export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props) {
   const [step, setStep] = useState<'feel' | 'word'>('feel')
+  const primaryActionClass = echoVoid ? 'btn btn-primary echo-confirm' : 'btn btn-primary'
 
   /* ---- 第一步：旋转调整整体感受 ---- */
   const [angle, setAngle] = useState(0) // -270..270，每 90° 一档
@@ -240,7 +241,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
             </>
           )}
 
-          <button className={`btn btn-primary ${echoVoid ? 'echo-confirm' : ''}`} onClick={() => setStep('word')}>
+          <button className={primaryActionClass} onClick={() => setStep('word')}>
             就是这种感觉
           </button>
         </>
@@ -318,7 +319,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
           </div>
 
           <button
-            className="btn btn-primary"
+            className={primaryActionClass}
             onClick={() => onNext({
               valence: selectedMood.valence,
               labels,
