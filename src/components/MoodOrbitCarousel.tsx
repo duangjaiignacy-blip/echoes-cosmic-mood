@@ -30,16 +30,13 @@ export function MoodOrbitCarousel({
   onExpandedChange,
 }: Props) {
   const stopDrag = (event: PointerEvent<HTMLButtonElement>) => event.stopPropagation()
-  const revealOrbit = (event: PointerEvent<HTMLButtonElement>) => {
-    event.stopPropagation()
-    onExpandedChange(true)
-  }
+  const revealOrbit = () => onExpandedChange(true)
   const activeMood = ECHO_MOODS[activeIndex]
   const pose = orbitalMoodPose(activeIndex, position, ECHO_MOODS.length)
   const style: CSSProperties = {
     opacity: pose.opacity,
     zIndex: pose.zIndex,
-    transform: `translate3d(calc(-50% + ${pose.x}px), -50%, 0) scale(${pose.scale})`,
+    transform: `translate3d(calc(-50% + ${pose.x}px), calc(-50% + ${pose.y}px), 0) scale(${pose.scale})`,
   }
   const selectMood = (index: number) => {
     onExpandedChange(true)
@@ -53,7 +50,7 @@ export function MoodOrbitCarousel({
       data-orbit-expanded={expanded}
     >
       <div className="mood-orbit-lane" aria-hidden="true">
-        <div className="mood-orbit-item is-active" data-mood-id={activeMood.id} style={style}>
+        <div key={activeMood.id} className="mood-orbit-item is-active" data-mood-id={activeMood.id} style={style}>
           <MoodPlanetImage moodId={activeMood.id} alt="" size={ORB_VIEWPORT_SIZE} />
         </div>
       </div>
@@ -61,6 +58,7 @@ export function MoodOrbitCarousel({
       <button
         type="button"
         className="mood-orbit-toggle"
+        data-mood-drag-surface="true"
         aria-label={expanded ? '情绪文字已展开' : '显示全部情绪'}
         aria-expanded={expanded}
         onPointerDown={revealOrbit}

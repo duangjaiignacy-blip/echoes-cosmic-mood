@@ -777,8 +777,10 @@ body {
 .echo-feel-dial {
   margin-top: 108px !important;
   touch-action: none;
-  cursor: ew-resize;
+  cursor: grab;
 }
+
+.echo-feel-dial:active { cursor: grabbing; }
 
 .echo-feel-dial:focus-visible {
   outline: none;
@@ -834,6 +836,17 @@ body {
   pointer-events: none;
 }
 
+.mood-orbit-item > span {
+  animation: echo-mood-impact 360ms cubic-bezier(0.2, 0.86, 0.2, 1) both;
+  transform-origin: center;
+}
+
+@keyframes echo-mood-impact {
+  0% { transform: scale(0.94); filter: brightness(1.38) saturate(1.08); }
+  48% { transform: scale(1.075); filter: brightness(1.2) saturate(1.04); }
+  100% { transform: scale(1); filter: none; }
+}
+
 .mood-orbit-toggle {
   position: absolute;
   left: 50%;
@@ -849,7 +862,7 @@ body {
   background: transparent;
   cursor: pointer;
   pointer-events: auto;
-  touch-action: manipulation;
+  touch-action: none;
 }
 
 .mood-orbit-toggle::after {
@@ -944,7 +957,8 @@ body {
   box-shadow:
     inset 0 0 18px rgba(188, 196, 221, 0.025),
     0 0 18px rgba(188, 196, 221, 0.025);
-  transition: border-color 320ms ease, box-shadow 320ms ease;
+  transform: scale(1);
+  transition: transform 220ms ease, border-color 320ms ease, box-shadow 320ms ease;
 }
 
 .mood-orbit-carousel.is-expanded .mood-orbit-steps::before {
@@ -952,6 +966,14 @@ body {
   box-shadow:
     inset 0 0 22px rgba(201, 208, 232, 0.045),
     0 0 22px rgba(201, 208, 232, 0.04);
+}
+
+.mood-orbit-carousel.is-dragging .mood-orbit-steps::before {
+  transform: scale(1.025);
+  border-color: rgba(232, 236, 246, 0.34);
+  box-shadow:
+    inset 0 0 28px rgba(210, 217, 239, 0.075),
+    0 0 30px rgba(202, 211, 239, 0.08);
 }
 
 .mood-orbit-step {
@@ -1148,6 +1170,15 @@ body {
   .mood-orbit-text,
   .mood-orbit-toggle::after {
     transition: none;
+  }
+
+  .mood-orbit-item > span {
+    animation: none;
+  }
+
+  .mood-orbit-steps::before,
+  .mood-orbit-carousel.is-dragging .mood-orbit-steps::before {
+    transform: none;
   }
 }
 

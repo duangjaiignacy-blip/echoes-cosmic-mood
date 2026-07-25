@@ -58,6 +58,30 @@ test('pressing the active planet immediately reveals the text-only orbit without
   assert.doesNotMatch(home, /<span aria-hidden="true">[‹›]<\/span>/)
 })
 
+test('the visible planet remains clickable and becomes a drag surface', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const carousel = await readFile(carouselUrl, 'utf8')
+
+  assert.match(carousel, /data-mood-drag-surface="true"/)
+  assert.match(carousel, /key=\{activeMood\.id\}/)
+  assert.doesNotMatch(
+    carousel,
+    /const revealOrbit = \([^)]*\) => \{\s*event\.stopPropagation\(\)/s,
+  )
+})
+
+test('dragging visibly energizes the planet and rigid tick ring', () => {
+  assert.match(css, /@keyframes echo-mood-impact/)
+  assert.match(
+    css,
+    /\.mood-orbit-item > span\s*\{[^}]*animation:\s*echo-mood-impact/s,
+  )
+  assert.match(
+    css,
+    /\.mood-orbit-carousel\.is-dragging \.mood-orbit-steps::before\s*\{[^}]*transform:\s*scale\(1\.025\)/s,
+  )
+})
+
 test('every revealed mood word is a directly selectable button', async () => {
   const { readFile } = await import('node:fs/promises')
   const carousel = await readFile(carouselUrl, 'utf8')

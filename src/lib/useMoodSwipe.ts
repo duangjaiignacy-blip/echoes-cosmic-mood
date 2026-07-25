@@ -1,15 +1,18 @@
 import { useEffect, useRef } from 'react'
 import {
+  chooseMoodDragAxis,
   ECHO_MOOD_STEP_PX,
   isMoodDragStartAllowed,
   moodPositionFromDrag,
   projectMoodSnap,
+  type MoodDragAxis,
 } from '../components/moodSwipeModel'
 
 export type MoodSwipePhase = 'dragging' | 'settling'
 
 interface PointerSample {
   x: number
+  y: number
   time: number
 }
 
@@ -36,10 +39,11 @@ export function useMoodSwipe(
     let startY = 0
     let livePosition = startPosition
     let activePointerId: number | null = null
+    let axis: MoodDragAxis | null = null
     let samples: PointerSample[] = []
 
-    const remember = (x: number, time: number) => {
-      samples.push({ x, time })
+    const remember = (x: number, y: number, time: number) => {
+      samples.push({ x, y, time })
       samples = samples.filter((sample) => time - sample.time <= VELOCITY_WINDOW_MS)
     }
 
@@ -47,7 +51,11 @@ export function useMoodSwipe(
       if (!event.isPrimary || (event.pointerType === 'mouse' && event.button !== 0)) return
       const targetPath = event.composedPath().map((target) => (
         target instanceof HTMLElement
-          ? { tagName: target.tagName, isContentEditable: target.isContentEditable }
+          ? {
+              tagName: target.tagName,
+              isContentEditable: target.isContentEditable,
+              allowsMoodDrag: target.dataset.moodDragSurface === 'true',
+            }
           : {}
       ))
       if (!isMoodDragStartAllowed(targetPath)) return
@@ -57,8 +65,9 @@ export function useMoodSwipe(
       livePosition = startPosition
       startX = event.clientX
       startY = event.clientY
+      axis = null
       samples = []
-      remember(event.clientX, event.timeStamp)
+      remember(event.clientX, event.clientY, event.timeStamp)
       element.setPointerCapture(event.pointerId)
       onPositionChangeRef.current(livePosition, 'dragging')
     }
@@ -66,27 +75,29 @@ export function useMoodSwipe(
     const move = (event: PointerEvent) => {
       if (event.pointerId !== activePointerId) return
 
-      livePosition = moodPositionFromDrag(
-        startPosition,
-        event.clientX - startX,
-        event.clientY - startY,
-        stepPx,
-      )
-      remember(event.clientX, event.timeStamp)
+      const deltaX = event.clientX - startX
+      const deltaY = event.clientY - startY
+      axis ??= chooseMoodDragAxis(deltaX, deltaY)
+      livePosition = moodPositionFromDrag(startPosition, deltaX, deltaY, stepPx, axis)
+      remember(event.clientX, event.clientY, event.timeStamp)
       onPositionChangeRef.current(livePosition, 'dragging')
     }
 
     const finish = (event: PointerEvent, cancelled: boolean) => {
       if (event.pointerId !== activePointerId) return
 
-      if (!cancelled) remember(event.clientX, event.timeStamp)
+      if (!cancelled) remember(event.clientX, event.clientY, event.timeStamp)
       const first = samples.at(0)
       const last = samples.at(-1)
       const elapsed = first && last ? last.time - first.time : 0
-      const velocity = !cancelled && first && last && elapsed > 0 ? (last.x - first.x) / elapsed : 0
+      const distance = first && last
+        ? axis === 'y' ? last.y - first.y : last.x - first.x
+        : 0
+      const velocity = !cancelled && elapsed > 0 ? distance / elapsed : 0
       const target = projectMoodSnap(livePosition, velocity, stepPx)
 
       activePointerId = null
+      axis = null
       samples = []
       onPositionChangeRef.current(target, 'settling')
 
