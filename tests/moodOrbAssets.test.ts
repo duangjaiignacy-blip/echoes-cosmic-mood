@@ -84,11 +84,12 @@ test('the registry and each registered asset are immutable at runtime', () => {
 
 test('left and right source panels compensate for their off-center sphere positions', () => {
   for (const asset of MOOD_ORB_ASSETS) {
-    const expectedOffset = [-11, 0, 11][asset.panel]
+    const expectedOffset = asset.id === 'anxious' ? -9 : [-11, 0, 11][asset.panel]
     assert.equal(asset.focusOffsetPercent, expectedOffset)
   }
 
   assert.equal(moodOrbSheetLeftPercent(getMoodOrbAsset('very-low')), -11)
   assert.equal(moodOrbSheetLeftPercent(getMoodOrbAsset('low')), -100)
   assert.equal(moodOrbSheetLeftPercent(getMoodOrbAsset('heavy')), -189)
+  assert.equal(moodOrbSheetLeftPercent(getMoodOrbAsset('anxious')), -9)
 })
