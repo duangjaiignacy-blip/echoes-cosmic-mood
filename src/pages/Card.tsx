@@ -11,9 +11,10 @@ import type { Entry, StickerTemplateId } from '../types'
 interface Props {
   entry: Entry
   onDone: () => void
+  onHome: () => void
 }
 
-export function Card({ entry, onDone }: Props) {
+export function Card({ entry, onDone, onHome }: Props) {
   const [selected, setSelected] = useState<StickerTemplateId>(() =>
     normalizeStickerTemplate(entry.stickerTemplate),
   )
@@ -79,21 +80,6 @@ export function Card({ entry, onDone }: Props) {
     anchor.href = url
     anchor.download = `milo-${entry.timeMark ?? '此刻'}-${selected}.png`
     anchor.click()
-  }
-
-  const share = async () => {
-    if (!url) return
-    try {
-      const blob = await (await fetch(url)).blob()
-      const file = new File([blob], 'milo-memory.png', { type: 'image/png' })
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: '米洛 · 一段回忆' })
-        return
-      }
-    } catch {
-      /* 用户取消或系统不支持时回退到下载 */
-    }
-    download()
   }
 
   return (
@@ -174,8 +160,8 @@ export function Card({ entry, onDone }: Props) {
         <button className="btn" onClick={download} disabled={!url}>
           保存图片
         </button>
-        <button className="btn btn-primary" onClick={() => void share()} disabled={!url}>
-          分享
+        <button className="btn btn-primary" onClick={onHome}>
+          回到首页
         </button>
       </footer>
     </main>

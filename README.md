@@ -43,7 +43,7 @@ AI 引导依赖 [Codex](https://github.com/openai/codex) 账号：
 | 前端 | React 19 + TypeScript + Vite |
 | AI 对话 | Codex ACP（stdio JSON-RPC），Node WebSocket 桥接到浏览器 |
 | 语音输入 | Web Speech API（zh-CN） |
-| 分享卡片 | Canvas 2D 渲染 1080px 宽、自适应高度 PNG，`navigator.share` / 下载兜底 |
+| 分享卡片 | Canvas 2D 渲染 1080px 宽、自适应高度 PNG，可保存图片后回到首页 |
 | 数据 | localStorage 本地存储，无后端、无账号 |
 
 ## 目录结构

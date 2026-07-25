@@ -117,7 +117,11 @@ export default function App() {
       {screen.name === 'diary' && <Diary draft={draft} onBack={() => go({ name: 'chat' })} onSave={savePast} />}
 
       {screen.name === 'card' && (
-        <CardOrHome entryId={screen.entryId} onDone={() => go({ name: 'timeline' })} />
+        <CardOrHome
+          entryId={screen.entryId}
+          onDone={() => go({ name: 'timeline' })}
+          onHome={() => go({ name: 'home' })}
+        />
       )}
 
       {screen.name === 'timeline' && (
@@ -135,11 +139,19 @@ export default function App() {
   )
 }
 
-function CardOrHome({ entryId, onDone }: { entryId: string; onDone: () => void }) {
+function CardOrHome({
+  entryId,
+  onDone,
+  onHome,
+}: {
+  entryId: string
+  onDone: () => void
+  onHome: () => void
+}) {
   const entry = getEntry(entryId)
   if (!entry) {
     onDone()
     return null
   }
-  return <Card entry={entry} onDone={onDone} />
+  return <Card entry={entry} onDone={onDone} onHome={onHome} />
 }

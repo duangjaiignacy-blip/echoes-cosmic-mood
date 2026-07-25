@@ -1709,7 +1709,7 @@ textarea.note-input {
 /* ---------- 回忆卡片 ---------- */
 .memory-sticker-screen {
   max-width: 560px;
-  padding-bottom: max(26px, env(safe-area-inset-bottom));
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
 }
 
 .sticker-intro {
@@ -1930,7 +1930,7 @@ textarea.note-input {
   display: block;
   overflow: hidden;
   width: 100%;
-  aspect-ratio: 4 / 3.35;
+  aspect-ratio: 8 / 5;
   border-radius: 9px;
   background: rgba(255, 255, 255, 0.045);
 }
@@ -1940,7 +1940,7 @@ textarea.note-input {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center 22%;
+  object-position: center top;
 }
 
 .template-artwork-loading {
@@ -1983,10 +1983,23 @@ textarea.note-input {
 }
 
 .sticker-actions {
+  position: fixed;
+  z-index: 20;
+  right: 50%;
+  bottom: max(14px, env(safe-area-inset-bottom));
   display: grid;
+  width: min(calc(100% - 40px), 512px);
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-top: 13px;
+  padding: 10px;
+  margin: 0;
+  border: 1px solid rgba(213, 205, 244, 0.14);
+  border-radius: 20px;
+  background: rgba(7, 7, 18, 0.76);
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.46);
+  transform: translateX(50%);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
 }
 
 .sticker-actions .btn {
