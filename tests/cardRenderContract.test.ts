@@ -78,13 +78,12 @@ test('the card page awaits async rendering and cancels stale or unmounted work',
   assert.match(cardPage, /return \(\) => \{\s*active = false\s*controller\.abort\(\)\s*\}/s)
 })
 
-test('the sticker registry exposes A, B, and C with the mist-violet ticket first', async () => {
+test('the card registry removes the second template and keeps the mist-violet card first', async () => {
   const cardModule = await import('../src/lib/card.ts')
   const templates = Reflect.get(cardModule, 'STICKER_TEMPLATES')
 
   assert.deepEqual(templates, [
-    { id: 'planet-letter', name: '星球票根', tone: '雾紫票纸' },
-    { id: 'fragment-archive', name: '碎片档案', tone: '编辑杂志' },
+    { id: 'planet-letter', name: '星球卡片', tone: '雾紫卡纸' },
     { id: 'orbit-theatre', name: '轨道剧场', tone: '社交海报' },
   ])
 })
@@ -104,7 +103,7 @@ test('invalid or missing template IDs fall back to A', async () => {
 test('every template keeps the exact homepage mood artwork contract', () => {
   const mood = sampleEntry.mood
 
-  for (const templateId of ['planet-letter', 'fragment-archive', 'orbit-theatre']) {
+  for (const templateId of ['planet-letter', 'orbit-theatre']) {
     const contract = cardRenderContract(mood, templateId)
     assert.equal(Reflect.get(contract, 'templateId'), templateId)
     assert.deepEqual(contract.artwork, cardMoodArtwork('bright'))
@@ -125,7 +124,7 @@ test('memory tickets receive a stable branded ID without a fake QR generator', a
 test('the selected sticker template is persisted on each memory entry', () => {
   const typesSource = readFileSync(new URL('../src/types.ts', import.meta.url), 'utf8')
 
-  assert.match(typesSource, /export type StickerTemplateId = 'planet-letter' \| 'fragment-archive' \| 'orbit-theatre'/)
+  assert.match(typesSource, /export type StickerTemplateId = 'planet-letter' \| 'orbit-theatre'/)
   assert.match(typesSource, /stickerTemplate\?: StickerTemplateId/)
 })
 
@@ -192,4 +191,18 @@ test('all sticker layouts stay inside the moon-silver violet family', () => {
   const cardSource = readFileSync(new URL('../src/lib/card.ts', import.meta.url), 'utf8')
 
   assert.doesNotMatch(cardSource, /#4c6fe6/i)
+})
+
+test('card previews keep fixed thumbnails while full cards can grow and scroll', () => {
+  const cardPage = readFileSync(new URL('../src/pages/Card.tsx', import.meta.url), 'utf8')
+  const cardSource = readFileSync(new URL('../src/lib/card.ts', import.meta.url), 'utf8')
+  const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
+
+  assert.match(cardPage, /你的情绪卡片/)
+  assert.match(cardPage, /选择卡片模板/)
+  assert.match(cardSource, /function measureCardHeight\(/)
+  assert.match(cardSource, /const lines = wrapText\(ctx, copy\.body, 796\)/)
+  assert.match(cardSource, /const lines = wrapText\(ctx, copy\.body, 790\)/)
+  assert.match(css, /\.sticker-preview-shell\s*\{[^}]*max-height:[^}]*overflow-y:\s*auto/s)
+  assert.match(css, /\.template-artwork\s*\{[^}]*aspect-ratio:\s*4\s*\/\s*3\.35/s)
 })

@@ -10,7 +10,7 @@
    - **过去**：只需一个模糊的时间标记（"去年夏天""大学毕业前后"），不必精确到日期。
 3. **AI 引导回忆** — 通过 Codex ACP 接入 AI，一步步陪你说出当时的情景、困难或快乐、背后的原因，以及那一天对现在的特别之处。支持文字与浏览器语音输入。
 4. **沉淀为日记** — 对话结束后，AI 以你的第一人称视角写成一篇日记（可手动开关、可编辑）。
-5. **分享与回看** — 日记一键生成分享贴纸（Canvas 渲染），保存的回忆随时在时间线里回看。
+5. **分享与回看** — 日记一键生成分享卡片（Canvas 渲染），保存的回忆随时在时间线里回看。
 
 ## 快速开始
 
@@ -43,7 +43,7 @@ AI 引导依赖 [Codex](https://github.com/openai/codex) 账号：
 | 前端 | React 19 + TypeScript + Vite |
 | AI 对话 | Codex ACP（stdio JSON-RPC），Node WebSocket 桥接到浏览器 |
 | 语音输入 | Web Speech API（zh-CN） |
-| 分享贴纸 | Canvas 2D 渲染 1080×1350 PNG，`navigator.share` / 下载兜底 |
+| 分享卡片 | Canvas 2D 渲染 1080px 宽、自适应高度 PNG，`navigator.share` / 下载兜底 |
 | 数据 | localStorage 本地存储，无后端、无账号 |
 
 ## 目录结构
@@ -53,7 +53,7 @@ server/acp-bridge.mjs   # WebSocket ↔ codex-acp 桥接服务
 src/
   components/           # 晶体光球、星空背景
   lib/                  # ACP 客户端、旋转拨盘手势、引导 prompt、语音、卡片渲染
-  pages/                # 首页拨盘 → 分流 → 对话 → 日记 → 贴纸 → 时间线
+  pages/                # 首页拨盘 → 分流 → 对话 → 日记 → 卡片 → 时间线
   store.ts              # localStorage 状态
 ```
 

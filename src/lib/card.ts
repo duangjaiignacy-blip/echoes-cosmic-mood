@@ -28,8 +28,7 @@ export const CARD_THEME = Object.freeze({
 export const DEFAULT_STICKER_TEMPLATE: StickerTemplateId = 'planet-letter'
 
 export const STICKER_TEMPLATES = [
-  { id: 'planet-letter', name: '星球票根', tone: '雾紫票纸' },
-  { id: 'fragment-archive', name: '碎片档案', tone: '编辑杂志' },
+  { id: 'planet-letter', name: '星球卡片', tone: '雾紫卡纸' },
   { id: 'orbit-theatre', name: '轨道剧场', tone: '社交海报' },
 ] as const
 
@@ -37,7 +36,6 @@ const TEMPLATE_IDS = new Set<string>(STICKER_TEMPLATES.map((item) => item.id))
 
 const TEMPLATE_SEEDS: Record<StickerTemplateId, number> = {
   'planet-letter': 0x2d16a43f,
-  'fragment-archive': 0x67ab19d2,
   'orbit-theatre': 0x418be2c7,
 }
 
@@ -102,7 +100,7 @@ export function cardMoodArtwork(emotionId?: MoodId): CardMoodArtwork | null {
   })
 }
 
-/** 三种版式共享同一份情绪星球裁切，旧记录则保留渐变球降级。 */
+/** 两种版式共享同一份情绪星球裁切，旧记录则保留渐变球降级。 */
 export function cardRenderContract(
   mood: MoodState,
   templateId: StickerTemplateId = DEFAULT_STICKER_TEMPLATE,
@@ -123,7 +121,7 @@ export function getStickerCopy(entry: Entry) {
   }
 }
 
-/** 贴纸内容变化时才重绘；模板选择本身复用已生成的三张图。 */
+/** 卡片内容变化时才重绘；模板选择本身复用已生成的图片。 */
 export function stickerRenderKey(entry: Entry): string {
   return JSON.stringify({
     id: entry.id,
@@ -316,7 +314,7 @@ function paintStars(
   count: number,
   color: string,
   yStart = 0,
-  yEnd = H,
+  yEnd = ctx.canvas.height,
 ) {
   ctx.save()
   for (let index = 0; index < count; index++) {
@@ -332,7 +330,7 @@ function paintStars(
   ctx.restore()
 }
 
-function drawDate(ctx: CanvasRenderingContext2D, entry: Entry, color: string, y = H - 104) {
+function drawDate(ctx: CanvasRenderingContext2D, entry: Entry, color: string, y = ctx.canvas.height - 104) {
   const date = new Date(entry.createdAt)
   const dateText = `${date.getFullYear()} 年 ${date.getMonth() + 1} 月 ${date.getDate()} 日 · 记于米洛`
   ctx.textAlign = 'center'
@@ -341,7 +339,7 @@ function drawDate(ctx: CanvasRenderingContext2D, entry: Entry, color: string, y 
   ctx.fillText(dateText, W / 2, y)
 }
 
-function drawBrand(ctx: CanvasRenderingContext2D, color: string, y = H - 58) {
+function drawBrand(ctx: CanvasRenderingContext2D, color: string, y = ctx.canvas.height - 58) {
   ctx.textAlign = 'center'
   ctx.font = '600 22px "PingFang SC", sans-serif'
   ctx.letterSpacing = '8px'
@@ -411,23 +409,25 @@ function drawMemoryTicket(
 ) {
   const copy = getStickerCopy(entry)
   const [primary, deep] = contract.palette
+  const canvasH = ctx.canvas.height
+  const heightExtension = canvasH - H
   ctx.fillStyle = '#0b0b12'
-  ctx.fillRect(0, 0, W, H)
+  ctx.fillRect(0, 0, W, canvasH)
 
   const ambient = ctx.createRadialGradient(W * 0.74, 150, 20, W * 0.74, 150, 680)
   ambient.addColorStop(0, hexAlpha(primary, contract.moodTintAlpha))
   ambient.addColorStop(0.5, 'rgba(126,105,184,0.08)')
   ambient.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = ambient
-  ctx.fillRect(0, 0, W, H * 0.72)
+  ctx.fillRect(0, 0, W, canvasH * 0.72)
   paintStars(ctx, random, 76, '#ddd5f2')
 
   const ticketX = 88
   const ticketY = 44
   const ticketW = 904
-  const ticketH = 1262
+  const ticketH = 1262 + heightExtension
   const ticketRadius = 58
-  const tearY = 1008
+  const tearY = 1008 + heightExtension
 
   ctx.save()
   roundRect(ctx, ticketX, ticketY, ticketW, ticketH, ticketRadius)
@@ -551,7 +551,7 @@ function drawMemoryTicket(
   ctx.letterSpacing = '0px'
   ctx.fillStyle = '#17151d'
   ctx.font = '31px "Songti SC", "Noto Serif SC", serif'
-  const lines = fitLines(wrapText(ctx, copy.body, 796), 4)
+  const lines = wrapText(ctx, copy.body, 796)
   lines.forEach((line, index) => ctx.fillText(line, 142, 835 + index * 48))
 
   ctx.save()
@@ -575,39 +575,39 @@ function drawMemoryTicket(
   ctx.fillStyle = '#c5b5ee'
   ctx.strokeStyle = '#17151d'
   ctx.lineWidth = 4
-  drawBurst(ctx, 196, 1145, 63, 48)
+  drawBurst(ctx, 196, 1145 + heightExtension, 63, 48)
   ctx.fill()
   ctx.stroke()
   ctx.fillStyle = '#17151d'
   ctx.textAlign = 'center'
   ctx.font = '900 21px "Arial Black", sans-serif'
-  ctx.fillText('HEY~', 196, 1153)
+  ctx.fillText('HEY~', 196, 1153 + heightExtension)
 
   ctx.textAlign = 'left'
   ctx.fillStyle = '#17151d'
   ctx.font = '900 43px "PingFang SC", sans-serif'
-  ctx.fillText('收下这颗星', 284, 1125)
+  ctx.fillText('收下这颗星', 284, 1125 + heightExtension)
   ctx.font = '600 21px "PingFang SC", sans-serif'
   ctx.fillStyle = 'rgba(23,21,29,0.7)'
-  ctx.fillText('记忆编号已与这颗星绑定。', 286, 1166)
+  ctx.fillText('记忆编号已与这颗星绑定。', 286, 1166 + heightExtension)
 
   ctx.font = '800 17px ui-monospace, monospace'
   ctx.fillStyle = '#17151d'
-  ctx.fillText('MEMORY CODE', 720, 1080)
+  ctx.fillText('MEMORY CODE', 720, 1080 + heightExtension)
   ctx.strokeStyle = 'rgba(23,21,29,0.48)'
   ctx.lineWidth = 2
-  roundRect(ctx, 720, 1096, 224, 58, 14)
+  roundRect(ctx, 720, 1096 + heightExtension, 224, 58, 14)
   ctx.stroke()
   ctx.font = '700 17px ui-monospace, monospace'
   ctx.textAlign = 'center'
-  ctx.fillText(memoryTicketId(entry), 832, 1132)
+  ctx.fillText(memoryTicketId(entry), 832, 1132 + heightExtension)
 
   const date = new Date(entry.createdAt)
   const dateText = `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}  /  MILO ARCHIVE`
   ctx.textAlign = 'center'
   ctx.font = '700 17px ui-monospace, monospace'
   ctx.fillStyle = 'rgba(23,21,29,0.45)'
-  ctx.fillText(dateText, W / 2, 1272)
+  ctx.fillText(dateText, W / 2, 1272 + heightExtension)
 
   const edgeGlow = ctx.createLinearGradient(ticketX, tearY, ticketX + ticketW, tearY)
   edgeGlow.addColorStop(0, hexAlpha(deep, 0))
@@ -615,76 +615,6 @@ function drawMemoryTicket(
   edgeGlow.addColorStop(1, hexAlpha(deep, 0))
   ctx.fillStyle = edgeGlow
   ctx.fillRect(ticketX + 40, tearY + 2, ticketW - 80, 2)
-}
-
-function drawFragmentArchive(
-  ctx: CanvasRenderingContext2D,
-  entry: Entry,
-  contract: CardRenderContract,
-  loadedArtwork: LoadedMoodArtwork | null,
-  random: () => number,
-) {
-  const copy = getStickerCopy(entry)
-  ctx.fillStyle = '#ecebf1'
-  ctx.fillRect(0, 0, W, H)
-
-  paintStars(ctx, random, 72, '#8b849b', 0, H * 0.46)
-  ctx.fillStyle = '#766aa5'
-  ctx.fillRect(0, 0, 18, H)
-
-  ctx.textAlign = 'left'
-  ctx.fillStyle = '#766aa5'
-  ctx.font = '700 23px "PingFang SC", sans-serif'
-  ctx.letterSpacing = '5px'
-  ctx.fillText('MEMORY ISSUE / 025', 76, 86)
-  ctx.letterSpacing = '0px'
-
-  drawMoodArtwork(ctx, loadedArtwork, contract.palette, { x: 726, y: 46, width: 248 })
-
-  ctx.fillStyle = '#242033'
-  ctx.font = '800 91px "PingFang SC", sans-serif'
-  const headingLines = fitLines(wrapText(ctx, copy.heading, 590), 2)
-  headingLines.forEach((line, index) => ctx.fillText(line, 76, 240 + index * 94))
-
-  ctx.fillStyle = '#766aa5'
-  ctx.fillRect(76, 430, 610, 13)
-
-  if (copy.labels) {
-    ctx.font = '600 27px "PingFang SC", sans-serif'
-    ctx.fillStyle = '#665f79'
-    ctx.fillText(copy.labels, 76, 494)
-  }
-
-  ctx.fillStyle = 'rgba(255,255,255,0.72)'
-  roundRect(ctx, 76, 566, 928, 570, 24)
-  ctx.fill()
-  ctx.strokeStyle = 'rgba(100,88,135,0.2)'
-  ctx.lineWidth = 2
-  roundRect(ctx, 76, 566, 928, 570, 24)
-  ctx.stroke()
-
-  ctx.fillStyle = '#766aa5'
-  ctx.font = '700 20px "PingFang SC", sans-serif'
-  ctx.letterSpacing = '4px'
-  ctx.fillText('MEMORY TRANSCRIPT', 116, 622)
-  ctx.letterSpacing = '0px'
-
-  ctx.font = '31px "Songti SC", "Noto Serif SC", serif'
-  const bodyLines = fitLines(wrapText(ctx, copy.body, 390), 15)
-  const firstColumn = bodyLines.slice(0, 8)
-  const secondColumn = bodyLines.slice(8, 15)
-  ctx.fillStyle = '#373247'
-  firstColumn.forEach((line, index) => ctx.fillText(line, 116, 690 + index * 54))
-  secondColumn.forEach((line, index) => ctx.fillText(line, 576, 690 + index * 54))
-
-  ctx.strokeStyle = 'rgba(118,106,165,0.24)'
-  ctx.beginPath()
-  ctx.moveTo(540, 670)
-  ctx.lineTo(540, 1082)
-  ctx.stroke()
-
-  drawDate(ctx, entry, 'rgba(36,32,51,0.58)')
-  drawBrand(ctx, 'rgba(118,106,165,0.72)')
 }
 
 function drawOrbitTheatre(
@@ -695,12 +625,14 @@ function drawOrbitTheatre(
   random: () => number,
 ) {
   const copy = getStickerCopy(entry)
+  const canvasH = ctx.canvas.height
+  const heightExtension = canvasH - H
   const bg = ctx.createLinearGradient(0, 0, W, H)
   bg.addColorStop(0, '#332a59')
   bg.addColorStop(0.55, '#171831')
   bg.addColorStop(1, '#080b18')
   ctx.fillStyle = bg
-  ctx.fillRect(0, 0, W, H)
+  ctx.fillRect(0, 0, W, canvasH)
 
   paintStars(ctx, random, 104, '#e5def7')
 
@@ -740,11 +672,11 @@ function drawOrbitTheatre(
   }
 
   ctx.fillStyle = 'rgba(7,8,22,0.58)'
-  roundRect(ctx, 92, 634, 896, 462, 34)
+  roundRect(ctx, 92, 634, 896, 462 + heightExtension, 34)
   ctx.fill()
   ctx.strokeStyle = 'rgba(202,187,239,0.48)'
   ctx.lineWidth = 2
-  roundRect(ctx, 92, 634, 896, 462, 34)
+  roundRect(ctx, 92, 634, 896, 462 + heightExtension, 34)
   ctx.stroke()
 
   ctx.fillStyle = '#c6b4ed'
@@ -755,11 +687,11 @@ function drawOrbitTheatre(
 
   ctx.fillStyle = 'rgba(246,244,252,0.9)'
   ctx.font = '34px "Songti SC", "Noto Serif SC", serif'
-  const lines = fitLines(wrapText(ctx, copy.body, 790), 6)
+  const lines = wrapText(ctx, copy.body, 790)
   lines.forEach((line, index) => ctx.fillText(line, 140, 770 + index * 58))
 
   ctx.save()
-  ctx.translate(843, 1172)
+  ctx.translate(843, 1172 + heightExtension)
   ctx.rotate(-0.07)
   ctx.strokeStyle = 'rgba(205,191,239,0.8)'
   ctx.lineWidth = 2
@@ -770,17 +702,31 @@ function drawOrbitTheatre(
   ctx.fillText('MILO ARCHIVE / 07', 0, 7)
   ctx.restore()
 
-  drawDate(ctx, entry, 'rgba(221,213,241,0.58)', H - 96)
-  drawBrand(ctx, 'rgba(205,193,236,0.52)', H - 50)
+  drawDate(ctx, entry, 'rgba(221,213,241,0.58)', canvasH - 96)
+  drawBrand(ctx, 'rgba(205,193,236,0.52)', canvasH - 50)
 }
 
 export const templateRenderers: Record<StickerTemplateId, StickerRenderer> = {
   'planet-letter': drawMemoryTicket,
-  'fragment-archive': drawFragmentArchive,
   'orbit-theatre': drawOrbitTheatre,
 }
 
-/** 把一条回忆异步渲染成可分享的 4:5 PNG 贴纸。 */
+function measureCardHeight(
+  ctx: CanvasRenderingContext2D,
+  entry: Entry,
+  templateId: StickerTemplateId,
+): number {
+  const copy = getStickerCopy(entry)
+  if (templateId === 'planet-letter') {
+    ctx.font = '31px "Songti SC", "Noto Serif SC", serif'
+    return H + Math.max(0, wrapText(ctx, copy.body, 796).length - 4) * 48
+  }
+
+  ctx.font = '34px "Songti SC", "Noto Serif SC", serif'
+  return H + Math.max(0, wrapText(ctx, copy.body, 790).length - 6) * 58
+}
+
+/** 把一条回忆异步渲染成可分享、可随正文增高的 PNG 卡片。 */
 export async function renderCard(
   entry: Entry,
   templateId: StickerTemplateId = DEFAULT_STICKER_TEMPLATE,
@@ -799,8 +745,15 @@ export async function renderCard(
   const canvas = document.createElement('canvas')
   canvas.width = W
   canvas.height = H
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('当前浏览器无法生成贴纸。')
+  let ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('当前浏览器无法生成卡片。')
+
+  const measuredHeight = measureCardHeight(ctx, entry, contract.templateId)
+  if (measuredHeight !== H) {
+    canvas.height = measuredHeight
+    ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('当前浏览器无法生成卡片。')
+  }
 
   const random = createSeededRandom(stableHash(entry.id) ^ TEMPLATE_SEEDS[contract.templateId])
   templateRenderers[contract.templateId](ctx, entry, contract, loadedArtwork, random)

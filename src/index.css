@@ -766,16 +766,6 @@ body {
   color: rgba(205, 208, 218, 0.72);
 }
 
-.echo-feel-title {
-  color: rgba(235, 236, 241, 0.94);
-  font-size: clamp(29px, 6.8vw, 36px);
-  font-weight: 520;
-  line-height: 1.32;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
-  text-shadow: 0 0 26px rgba(166, 174, 194, 0.1);
-}
-
 .echo-feel-dial {
   margin-top: 108px !important;
   touch-action: none;
@@ -1716,7 +1706,7 @@ textarea.note-input {
   .btn:active { transform: none; }
 }
 
-/* ---------- 回忆贴纸 ---------- */
+/* ---------- 回忆卡片 ---------- */
 .memory-sticker-screen {
   max-width: 560px;
   padding-bottom: max(26px, env(safe-area-inset-bottom));
@@ -1743,27 +1733,41 @@ textarea.note-input {
 }
 
 .sticker-preview-shell {
-  display: grid;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
   min-height: 375px;
-  place-items: center;
+  max-height: min(68dvh, 760px);
+  padding: 12px 0;
   margin-bottom: 20px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-color: rgba(190, 177, 244, 0.38) transparent;
+  scrollbar-width: thin;
 }
 
-.sticker-preview-image,
-.sticker-preview-skeleton {
+.sticker-preview-image {
   width: min(76%, 320px);
-  aspect-ratio: 4 / 5;
   border-radius: 23px;
 }
 
 .sticker-preview-image {
   display: block;
+  height: auto;
+  flex: 0 0 auto;
   object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.11);
   box-shadow:
     0 28px 76px rgba(0, 0, 0, 0.5),
     0 0 54px rgba(139, 124, 246, 0.14);
   animation: sticker-reveal 0.46s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sticker-preview-skeleton {
+  width: min(76%, 320px);
+  aspect-ratio: 4 / 5;
+  flex: 0 0 auto;
+  border-radius: 23px;
 }
 
 @keyframes sticker-reveal {

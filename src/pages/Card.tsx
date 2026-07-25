@@ -52,8 +52,8 @@ export function Card({ entry, onDone }: Props) {
       } catch (error) {
         if (active && !(error instanceof DOMException && error.name === 'AbortError')) {
           setUrls({})
-          setRenderError(error instanceof Error ? error.message : '贴纸显影失败，请稍后再试。')
-          console.error('[Card] 贴纸渲染失败', error)
+          setRenderError(error instanceof Error ? error.message : '卡片显影失败，请稍后再试。')
+          console.error('[Card] 卡片渲染失败', error)
         }
       }
     }
@@ -106,7 +106,7 @@ export function Card({ entry, onDone }: Props) {
 
       <section className="sticker-intro">
         <p className="eyebrow">MILO MEMORY</p>
-        <h1 className="title">你的情绪票根</h1>
+        <h1 className="title">你的情绪卡片</h1>
         <p className="subtitle">把这颗星球，分享给今天的世界。</p>
       </section>
 
@@ -116,7 +116,7 @@ export function Card({ entry, onDone }: Props) {
             key={selected}
             className="sticker-preview-image"
             src={url}
-            alt={`${STICKER_TEMPLATES.find((item) => item.id === selected)?.name ?? '回忆'}贴纸预览`}
+            alt={`${STICKER_TEMPLATES.find((item) => item.id === selected)?.name ?? '回忆卡片'}预览`}
           />
         ) : renderError ? (
           <div className="sticker-preview-skeleton sticker-preview-error">
@@ -127,7 +127,7 @@ export function Card({ entry, onDone }: Props) {
           </div>
         ) : (
           <div className="sticker-preview-skeleton">
-            <span>贴纸显影中…</span>
+            <span>卡片显影中…</span>
           </div>
         )}
       </section>
@@ -136,7 +136,7 @@ export function Card({ entry, onDone }: Props) {
         <div className="template-picker-heading">
           <div>
             <p className="template-kicker">LAYOUTS</p>
-            <h2 id="template-title">选择贴纸模板</h2>
+            <h2 id="template-title">选择卡片模板</h2>
           </div>
           <span>{STICKER_TEMPLATES.findIndex((item) => item.id === selected) + 1} / {STICKER_TEMPLATES.length}</span>
         </div>

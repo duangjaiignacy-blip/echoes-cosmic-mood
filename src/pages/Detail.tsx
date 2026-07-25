@@ -89,7 +89,7 @@ export function Detail({ entryId, onCard, onBack }: Props) {
       )}
 
       <button className="btn btn-primary" onClick={() => onCard(entry.id)}>
-        生成回忆贴纸
+        生成回忆卡片
       </button>
     </div>
   )
