@@ -49,3 +49,8 @@ test('echo mode removes the abrupt bounce transition contract', () => {
   }
   assert.match(css, /520ms cubic-bezier\(0\.22, 0\.72, 0\.18, 1\)/)
 })
+
+test('mobile scrolling stays vertical and the single-orb lane does not widen the page', () => {
+  assert.match(css, /\.screen-scroll\s*\{[^}]*overflow-x:\s*hidden;[^}]*overscroll-behavior-x:\s*none;/s)
+  assert.match(css, /\.mood-orbit-lane\s*\{[^}]*inset:\s*-120px 0;/s)
+})

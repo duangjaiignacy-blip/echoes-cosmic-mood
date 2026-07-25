@@ -4,6 +4,13 @@ export interface MoodOrbAsset {
   readonly id: MoodId
   readonly sheet: string
   readonly panel: 0 | 1 | 2
+  readonly focusOffsetPercent: -11 | 0 | 11
+}
+
+const PANEL_FOCUS_OFFSETS = [-11, 0, 11] as const
+
+function moodOrbAsset(id: MoodId, sheet: string, panel: 0 | 1 | 2): Readonly<MoodOrbAsset> {
+  return Object.freeze({ id, sheet, panel, focusOffsetPercent: PANEL_FOCUS_OFFSETS[panel] })
 }
 
 const VERY_LOW_LOW_HEAVY_SHEET = new URL(
@@ -32,22 +39,26 @@ const ANXIOUS_AGGRIEVED_EMBARRASSED_SHEET = new URL(
 ).href
 
 export const MOOD_ORB_ASSETS: readonly Readonly<MoodOrbAsset>[] = Object.freeze([
-  Object.freeze({ id: 'very-low', sheet: VERY_LOW_LOW_HEAVY_SHEET, panel: 0 }),
-  Object.freeze({ id: 'low', sheet: VERY_LOW_LOW_HEAVY_SHEET, panel: 1 }),
-  Object.freeze({ id: 'heavy', sheet: VERY_LOW_LOW_HEAVY_SHEET, panel: 2 }),
-  Object.freeze({ id: 'calm', sheet: CALM_OKAY_BRIGHT_SHEET, panel: 0 }),
-  Object.freeze({ id: 'okay', sheet: CALM_OKAY_BRIGHT_SHEET, panel: 1 }),
-  Object.freeze({ id: 'bright', sheet: CALM_OKAY_BRIGHT_SHEET, panel: 2 }),
-  Object.freeze({ id: 'joyful', sheet: JOYFUL_LONELY_SAD_SHEET, panel: 0 }),
-  Object.freeze({ id: 'lonely', sheet: JOYFUL_LONELY_SAD_SHEET, panel: 1 }),
-  Object.freeze({ id: 'sad', sheet: JOYFUL_LONELY_SAD_SHEET, panel: 2 }),
-  Object.freeze({ id: 'angry', sheet: ANGRY_AFRAID_DISAPPOINTED_SHEET, panel: 0 }),
-  Object.freeze({ id: 'afraid', sheet: ANGRY_AFRAID_DISAPPOINTED_SHEET, panel: 1 }),
-  Object.freeze({ id: 'disappointed', sheet: ANGRY_AFRAID_DISAPPOINTED_SHEET, panel: 2 }),
-  Object.freeze({ id: 'anxious', sheet: ANXIOUS_AGGRIEVED_EMBARRASSED_SHEET, panel: 0 }),
-  Object.freeze({ id: 'aggrieved', sheet: ANXIOUS_AGGRIEVED_EMBARRASSED_SHEET, panel: 1 }),
-  Object.freeze({ id: 'embarrassed', sheet: ANXIOUS_AGGRIEVED_EMBARRASSED_SHEET, panel: 2 }),
+  moodOrbAsset('very-low', VERY_LOW_LOW_HEAVY_SHEET, 0),
+  moodOrbAsset('low', VERY_LOW_LOW_HEAVY_SHEET, 1),
+  moodOrbAsset('heavy', VERY_LOW_LOW_HEAVY_SHEET, 2),
+  moodOrbAsset('calm', CALM_OKAY_BRIGHT_SHEET, 0),
+  moodOrbAsset('okay', CALM_OKAY_BRIGHT_SHEET, 1),
+  moodOrbAsset('bright', CALM_OKAY_BRIGHT_SHEET, 2),
+  moodOrbAsset('joyful', JOYFUL_LONELY_SAD_SHEET, 0),
+  moodOrbAsset('lonely', JOYFUL_LONELY_SAD_SHEET, 1),
+  moodOrbAsset('sad', JOYFUL_LONELY_SAD_SHEET, 2),
+  moodOrbAsset('angry', ANGRY_AFRAID_DISAPPOINTED_SHEET, 0),
+  moodOrbAsset('afraid', ANGRY_AFRAID_DISAPPOINTED_SHEET, 1),
+  moodOrbAsset('disappointed', ANGRY_AFRAID_DISAPPOINTED_SHEET, 2),
+  moodOrbAsset('anxious', ANXIOUS_AGGRIEVED_EMBARRASSED_SHEET, 0),
+  moodOrbAsset('aggrieved', ANXIOUS_AGGRIEVED_EMBARRASSED_SHEET, 1),
+  moodOrbAsset('embarrassed', ANXIOUS_AGGRIEVED_EMBARRASSED_SHEET, 2),
 ])
+
+export function moodOrbSheetLeftPercent(asset: Readonly<MoodOrbAsset>): number {
+  return asset.panel * -100 + asset.focusOffsetPercent
+}
 
 export function getMoodOrbAsset(id: MoodId): Readonly<MoodOrbAsset> {
   const asset = MOOD_ORB_ASSETS.find((candidate) => candidate.id === id)

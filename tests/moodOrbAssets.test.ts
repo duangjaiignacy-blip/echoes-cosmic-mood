@@ -4,7 +4,11 @@ import { fileURLToPath } from 'node:url'
 import test from 'node:test'
 
 import { ECHO_MOODS } from '../src/components/moodEmotionModel.ts'
-import { getMoodOrbAsset, MOOD_ORB_ASSETS } from '../src/components/moodOrbAssets.ts'
+import {
+  getMoodOrbAsset,
+  MOOD_ORB_ASSETS,
+  moodOrbSheetLeftPercent,
+} from '../src/components/moodOrbAssets.ts'
 
 const EXPECTED_ASSETS = [
   ['very-low', '01-very-low-low-heavy-transparent.png', 0],
@@ -76,4 +80,15 @@ test('the registry and each registered asset are immutable at runtime', () => {
   for (const asset of MOOD_ORB_ASSETS) {
     assert.equal(Object.isFrozen(asset), true)
   }
+})
+
+test('left and right source panels compensate for their off-center sphere positions', () => {
+  for (const asset of MOOD_ORB_ASSETS) {
+    const expectedOffset = [-11, 0, 11][asset.panel]
+    assert.equal(asset.focusOffsetPercent, expectedOffset)
+  }
+
+  assert.equal(moodOrbSheetLeftPercent(getMoodOrbAsset('very-low')), -11)
+  assert.equal(moodOrbSheetLeftPercent(getMoodOrbAsset('low')), -100)
+  assert.equal(moodOrbSheetLeftPercent(getMoodOrbAsset('heavy')), -189)
 })

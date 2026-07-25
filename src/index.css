@@ -183,6 +183,8 @@ body {
 
 .screen-scroll {
   overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
   scrollbar-width: none;
 }
 .screen-scroll::-webkit-scrollbar { display: none; }
@@ -806,7 +808,7 @@ body {
 
 .mood-orbit-lane {
   position: absolute;
-  inset: -120px -180px;
+  inset: -120px 0;
   overflow: visible;
   pointer-events: none;
 }

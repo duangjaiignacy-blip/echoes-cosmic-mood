@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 
 import type { MoodId } from '../types'
 import { ECHO_MOODS } from './moodEmotionModel'
-import { getMoodOrbAsset } from './moodOrbAssets'
+import { getMoodOrbAsset, moodOrbSheetLeftPercent } from './moodOrbAssets'
 
 export interface MoodPlanetImageProps {
   moodId: MoodId
@@ -42,7 +42,7 @@ export function MoodPlanetImage({
         style={{
           position: 'absolute',
           top: 0,
-          left: `${asset.panel * -100}%`,
+          left: `${moodOrbSheetLeftPercent(asset)}%`,
           display: 'block',
           width: '300%',
           height: '100%',
