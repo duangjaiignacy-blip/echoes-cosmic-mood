@@ -28,7 +28,9 @@ uniform float uRotationSpeed;
 
 const float STAR_SIZE_GAIN = 1.65;
 const float POINTER_REPULSION_SCALE = 0.055;
-const float MICRO_DUST_POPULATION = 0.26;
+const float MICRO_DUST_POPULATION = 0.16;
+const float FINE_STAR_POPULATION = 0.079;
+const float MID_STAR_POPULATION = 0.056;
 const float STARFIELD_DENSITY_FLOOR = 0.52;
 
 float hash21(vec2 p) {
@@ -162,12 +164,19 @@ float layeredStarField(vec2 uv) {
   float cluster = densityFloor + clusterA * 0.54 + clusterB * 0.31;
 
   float stars = microStarDust(uv) * mix(0.78, 1.22, clusterB);
-  stars += animatedStarLayer(uv, 214.0, 41.2, 0.105, vec2(0.13, 0.27), 0.1667) * 0.25;
+  stars += animatedStarLayer(
+    uv,
+    214.0,
+    41.2,
+    FINE_STAR_POPULATION,
+    vec2(0.13, 0.27),
+    0.1667
+  ) * 0.25;
   stars += animatedStarLayer(
     uv + vec2(0.13, -0.21),
     132.0,
     19.4,
-    0.075,
+    MID_STAR_POPULATION,
     vec2(0.10, 0.23),
     0.3333
   ) * 0.42;
