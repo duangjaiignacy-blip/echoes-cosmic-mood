@@ -4,7 +4,7 @@ export interface MoodOrbAsset {
   readonly id: MoodId
   readonly sheet: string
   readonly panel: 0 | 1 | 2
-  readonly focusOffsetPercent: -11 | 0 | 11
+  readonly focusOffsetPercent: number
 }
 
 export const MOOD_ORB_SHEET_PANEL_COUNT = 3
@@ -13,8 +13,13 @@ export const MOOD_ORB_VIEWPORT_HEIGHT = 2700
 
 const PANEL_FOCUS_OFFSETS = [-11, 0, 11] as const
 
-function moodOrbAsset(id: MoodId, sheet: string, panel: 0 | 1 | 2): Readonly<MoodOrbAsset> {
-  return Object.freeze({ id, sheet, panel, focusOffsetPercent: PANEL_FOCUS_OFFSETS[panel] })
+function moodOrbAsset(
+  id: MoodId,
+  sheet: string,
+  panel: 0 | 1 | 2,
+  focusOffsetPercent: number = PANEL_FOCUS_OFFSETS[panel],
+): Readonly<MoodOrbAsset> {
+  return Object.freeze({ id, sheet, panel, focusOffsetPercent })
 }
 
 const VERY_LOW_LOW_HEAVY_SHEET = new URL(
@@ -55,7 +60,7 @@ export const MOOD_ORB_ASSETS: readonly Readonly<MoodOrbAsset>[] = Object.freeze(
   moodOrbAsset('angry', ANGRY_AFRAID_DISAPPOINTED_SHEET, 0),
   moodOrbAsset('afraid', ANGRY_AFRAID_DISAPPOINTED_SHEET, 1),
   moodOrbAsset('disappointed', ANGRY_AFRAID_DISAPPOINTED_SHEET, 2),
-  moodOrbAsset('anxious', ANXIOUS_AGGRIEVED_EMBARRASSED_SHEET, 0),
+  moodOrbAsset('anxious', ANXIOUS_AGGRIEVED_EMBARRASSED_SHEET, 0, -9),
   moodOrbAsset('aggrieved', ANXIOUS_AGGRIEVED_EMBARRASSED_SHEET, 1),
   moodOrbAsset('embarrassed', ANXIOUS_AGGRIEVED_EMBARRASSED_SHEET, 2),
 ])
