@@ -878,13 +878,20 @@ body {
   position: absolute;
   left: 50%;
   top: 50%;
-  color: rgba(213, 216, 226, 0.58);
+  appearance: none;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: rgba(222, 225, 234, 0.82);
   font-family: var(--serif);
   font-size: 14px;
   line-height: 1;
   letter-spacing: 0.05em;
   white-space: nowrap;
-  filter: blur(0.25px);
+  filter: blur(0.15px);
+  cursor: pointer;
+  pointer-events: none;
+  touch-action: manipulation;
   transform-origin: center;
   will-change: transform, opacity;
   transition:
@@ -894,11 +901,30 @@ body {
     filter 320ms ease;
 }
 
+.mood-orbit-text[data-visible] {
+  pointer-events: auto;
+}
+
 .mood-orbit-text[data-active] {
   color: rgba(240, 241, 246, 0.94);
   font-size: 28px;
   filter: none;
   text-shadow: 0 0 22px rgba(205, 211, 233, 0.18);
+}
+
+.mood-orbit-text[data-visible]:hover {
+  color: rgba(248, 249, 252, 0.98);
+  filter: none;
+  text-shadow: 0 0 18px rgba(213, 220, 241, 0.32);
+}
+
+.mood-orbit-text:focus-visible {
+  outline: none;
+  color: rgba(252, 252, 255, 1);
+  filter: none;
+  text-shadow:
+    0 0 10px rgba(239, 242, 252, 0.72),
+    0 0 24px rgba(198, 207, 235, 0.38);
 }
 
 .mood-orbit-steps {

@@ -160,6 +160,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
             aria-valuenow={echoVoid ? echoMoodIndex + 1 : undefined}
             aria-valuetext={echoVoid ? echoMood.label : undefined}
             onKeyDown={handleMoodKeyDown}
+            onPointerDown={echoVoid ? () => setOrbitExpanded(true) : undefined}
             style={{ width: DIAL, height: DIAL, marginTop: 26 }}
           >
             <div className="dial-ring" />
@@ -194,7 +195,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
                 <span>{echoMood.label}</span>
               </div>
               <div className="dial-hint echo-swipe-hint">
-                {orbitExpanded ? '滑动刻度环，看看还有哪些感受' : '点击星球，展开情绪'}
+                {orbitExpanded ? '点击任意情绪，直接切换' : '点击或按住圆环，显示全部情绪'}
               </div>
             </>
           ) : (

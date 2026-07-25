@@ -19,7 +19,10 @@ test('the orbit exposes all fifteen fixed mood controls', async () => {
 
   assert.match(carousel, /ECHO_MOODS\.map/)
   assert.match(carousel, /className="mood-orbit-step"/)
+  assert.match(carousel, /className="mood-orbit-text"/)
   assert.match(carousel, /aria-label=\{`选择\$\{mood\.label\}`\}/)
+  assert.match(carousel, /aria-pressed=\{index === activeIndex\}/)
+  assert.match(carousel, /onClick=\{\(\) => selectMood\(index\)\}/)
   assert.match(carousel, /const ORB_VIEWPORT_SIZE = 244/)
 })
 
@@ -35,10 +38,11 @@ test('the home screen owns the collapsed and expanded tick-ring state', () => {
   assert.match(home, /const \[orbitExpanded, setOrbitExpanded\] = useState\(false\)/)
   assert.match(home, /expanded=\{orbitExpanded\}/)
   assert.match(home, /onExpandedChange=\{setOrbitExpanded\}/)
-  assert.match(home, /orbitExpanded \? '滑动刻度环，看看还有哪些感受' : '点击星球，展开情绪'/)
+  assert.match(home, /onPointerDown=\{echoVoid \? \(\) => setOrbitExpanded\(true\) : undefined\}/)
+  assert.match(home, /orbitExpanded \? '点击任意情绪，直接切换' : '点击或按住圆环，显示全部情绪'/)
 })
 
-test('the active planet toggles a text-only orbit without arrow glyphs', async () => {
+test('pressing the active planet immediately reveals the text-only orbit without arrows', async () => {
   const { readFile } = await import('node:fs/promises')
   const carousel = await readFile(carouselUrl, 'utf8')
 
@@ -46,11 +50,24 @@ test('the active planet toggles a text-only orbit without arrow glyphs', async (
   assert.match(carousel, /onExpandedChange: \(expanded: boolean\) => void/)
   assert.match(carousel, /className="mood-orbit-toggle"/)
   assert.match(carousel, /aria-expanded=\{expanded\}/)
+  assert.match(carousel, /onPointerDown=\{revealOrbit\}/)
   assert.match(carousel, /className="mood-orbit-texts"/)
   assert.match(carousel, /moodOrbitTextPose/)
   assert.match(carousel, /moodTickAngle/)
   assert.match(carousel, /moodTickOpacity/)
   assert.doesNotMatch(home, /<span aria-hidden="true">[‹›]<\/span>/)
+})
+
+test('every revealed mood word is a directly selectable button', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const carousel = await readFile(carouselUrl, 'utf8')
+
+  assert.match(carousel, /<button[\s\S]*className="mood-orbit-text"[\s\S]*aria-pressed=\{index === activeIndex\}/)
+  assert.match(carousel, /aria-hidden=\{!textPose\.visible\}/)
+  assert.match(carousel, /tabIndex=\{textPose\.visible \? 0 : -1\}/)
+  assert.match(carousel, /onPointerDown=\{stopDrag\}/)
+  assert.match(carousel, /onClick=\{\(\) => selectMood\(index\)\}/)
+  assert.match(carousel, /const selectMood = \(index: number\) => \{\s*onExpandedChange\(true\)\s*onSelect\(index\)/s)
 })
 
 test('keyboard focus follows the circular mood dial instead of drawing a square browser outline', () => {
@@ -107,10 +124,12 @@ test('the old bottom dot row becomes a close-fitting radial tick ring', () => {
   assert.doesNotMatch(css, /grid-template-columns:\s*repeat\(15, 1fr\)/)
 })
 
-test('the planet hit target and nearby mood words use restrained crossfade styling', () => {
+test('the planet hit target and all revealed mood words use restrained clickable styling', () => {
   assert.match(css, /\.mood-orbit-toggle\s*\{[^}]*width:\s*210px;[^}]*height:\s*210px;[^}]*pointer-events:\s*auto;/s)
   assert.match(css, /\.mood-orbit-texts\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;[^}]*pointer-events:\s*none;/s)
-  assert.match(css, /\.mood-orbit-text\s*\{[^}]*font-family:\s*var\(--serif\);[^}]*transition:[^}]*opacity 320ms/s)
+  assert.match(css, /\.mood-orbit-text\s*\{[^}]*appearance:\s*none;[^}]*padding:\s*8px 10px;[^}]*border:\s*0;[^}]*background:\s*transparent;[^}]*font-family:\s*var\(--serif\);[^}]*pointer-events:\s*none;[^}]*transition:[^}]*opacity 320ms/s)
+  assert.match(css, /\.mood-orbit-text\[data-visible\]\s*\{[^}]*pointer-events:\s*auto;/s)
   assert.match(css, /\.mood-orbit-text\[data-active\]\s*\{[^}]*font-size:\s*28px;/s)
+  assert.match(css, /\.mood-orbit-text:focus-visible\s*\{[^}]*outline:\s*none;[^}]*text-shadow:/s)
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.mood-orbit-text/s)
 })

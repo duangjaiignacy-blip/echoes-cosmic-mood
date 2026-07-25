@@ -35,20 +35,17 @@ test('collapsed orbit text exposes only the active mood', () => {
   assert.equal(neighbor.opacity, 0)
 })
 
-test('expanded orbit text crossfades only the active mood and immediate neighbors', () => {
-  const active = moodOrbitTextPose(3, 3, 15, true)
-  const previous = moodOrbitTextPose(2, 3, 15, true)
-  const next = moodOrbitTextPose(4, 3, 15, true)
-  const remote = moodOrbitTextPose(5, 3, 15, true)
+test('expanded orbit text reveals all fifteen moods while preserving a clear focus', () => {
+  const poses = Array.from({ length: 15 }, (_, index) => moodOrbitTextPose(index, 3, 15, true))
+  const active = poses[3]
+  const neighbor = poses[4]
+  const remote = poses[10]
 
+  assert.equal(poses.filter(({ visible }) => visible).length, 15)
   assert.equal(active.opacity, 1)
-  assert.equal(previous.opacity, 0.35)
-  assert.equal(next.opacity, 0.35)
-  assert.equal(previous.visible, true)
-  assert.equal(next.visible, true)
-  assert.equal(remote.visible, false)
-  assert.equal(remote.opacity, 0)
-  assert.ok(active.scale > next.scale)
+  assert.equal(neighbor.opacity, 0.56)
+  assert.equal(remote.opacity, 0.56)
+  assert.ok(active.scale > neighbor.scale)
 })
 
 test('expanded labels blend continuously while the ring is being dragged', () => {
@@ -57,7 +54,7 @@ test('expanded labels blend continuously while the ring is being dragged', () =>
 
   assert.ok(outgoing.opacity > incoming.opacity)
   assert.ok(outgoing.opacity < 1)
-  assert.ok(incoming.opacity > 0.35)
+  assert.ok(incoming.opacity > 0.56)
 })
 
 test('continuous positions wrap and activate at the nearest half-step', () => {

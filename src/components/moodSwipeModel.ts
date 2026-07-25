@@ -82,7 +82,7 @@ export function moodTickOpacity(index: number, position: number, count: number):
   return Math.max(0.22, 1 - distance * 0.3)
 }
 
-/** Only the focused word and its immediate neighbors crossfade into the expanded ring. */
+/** The collapsed ring keeps one focused word; expansion reveals the complete mood vocabulary. */
 export function moodOrbitTextPose(
   index: number,
   position: number,
@@ -91,14 +91,15 @@ export function moodOrbitTextPose(
 ): MoodOrbitTextPose {
   const distance = moodOrbitDistance(index, position, count)
   const isActive = wrapMoodIndex(index, count) === activeMoodIndex(position, count)
-  const opacity = expanded ? Math.max(0, 1 - Math.abs(distance) * 0.65) : isActive ? 1 : 0
+  const focus = Math.max(0, 1 - Math.abs(distance))
+  const opacity = expanded ? 0.56 + focus * 0.44 : isActive ? 1 : 0
 
   return {
     visible: opacity > 0.01,
     angle: moodTickAngle(index, position, count),
     distance,
     opacity,
-    scale: 0.86 + opacity * 0.14,
+    scale: 0.9 + focus * 0.1,
   }
 }
 

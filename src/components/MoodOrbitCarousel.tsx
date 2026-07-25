@@ -30,6 +30,10 @@ export function MoodOrbitCarousel({
   onExpandedChange,
 }: Props) {
   const stopDrag = (event: PointerEvent<HTMLButtonElement>) => event.stopPropagation()
+  const revealOrbit = (event: PointerEvent<HTMLButtonElement>) => {
+    event.stopPropagation()
+    onExpandedChange(true)
+  }
   const activeMood = ECHO_MOODS[activeIndex]
   const pose = orbitalMoodPose(activeIndex, position, ECHO_MOODS.length)
   const style: CSSProperties = {
@@ -57,12 +61,12 @@ export function MoodOrbitCarousel({
       <button
         type="button"
         className="mood-orbit-toggle"
-        aria-label={expanded ? '收起情绪文字' : '展开情绪文字'}
+        aria-label={expanded ? '情绪文字已展开' : '显示全部情绪'}
         aria-expanded={expanded}
-        onPointerDown={stopDrag}
-        onClick={() => onExpandedChange(!expanded)}
+        onPointerDown={revealOrbit}
+        onClick={() => onExpandedChange(true)}
       >
-        <span className="sr-only">{expanded ? '收起情绪文字' : '展开情绪文字'}</span>
+        <span className="sr-only">{expanded ? '情绪文字已展开' : '显示全部情绪'}</span>
       </button>
 
       <div className="mood-orbit-texts" aria-live="off">
@@ -79,16 +83,22 @@ export function MoodOrbitCarousel({
             ].join(' '),
           }
           return (
-            <span
+            <button
               key={mood.id}
+              type="button"
               className="mood-orbit-text"
               data-active={index === activeIndex ? true : undefined}
               data-visible={textPose.visible ? true : undefined}
-              aria-hidden="true"
+              aria-label={`选择${mood.label}`}
+              aria-pressed={index === activeIndex}
+              aria-hidden={!textPose.visible}
+              tabIndex={textPose.visible ? 0 : -1}
               style={textStyle}
+              onPointerDown={stopDrag}
+              onClick={() => selectMood(index)}
             >
               {mood.label}
-            </span>
+            </button>
           )
         })}
       </div>
