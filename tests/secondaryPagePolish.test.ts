@@ -43,3 +43,10 @@ test('the custom time field uses transparent shimmering glass instead of browser
   assert.match(css, /@keyframes note-shimmer\s*\{/)
   assert.match(css, /\.note-input:focus\s*\{[^}]*border-color:/s)
 })
+
+test('page entry motion keeps buttons and options opaque from the first frame', () => {
+  const screenIn = css.match(/@keyframes screen-in\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
+
+  assert.match(screenIn, /from\s*\{\s*transform:\s*translateY\(12px\)/)
+  assert.doesNotMatch(screenIn, /opacity|filter/)
+})
