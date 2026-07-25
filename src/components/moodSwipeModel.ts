@@ -5,7 +5,7 @@ export const ECHO_MOOD_STEP_PX = 28
 export const ECHO_MOOD_AXIS_LOCK_PX = 6
 export const ECHO_MOOD_ORBIT_TRAVEL_PX = 116
 export const ECHO_MOOD_PROJECTION_MS = 160
-export const ECHO_MOOD_MAX_FLING_STEPS = 3
+export const ECHO_MOOD_MAX_FLING_STEPS = 1
 
 export interface OrbitalMoodPose {
   visible: boolean

@@ -6,6 +6,7 @@ import {
   activeMoodIndex,
   chooseMoodDragAxis,
   ECHO_MOOD_AXIS_LOCK_PX,
+  ECHO_MOOD_MAX_FLING_STEPS,
   ECHO_MOOD_ORBIT_TRAVEL_PX,
   ECHO_MOOD_STEP_PX,
   moodPositionFromDrag,
@@ -100,10 +101,11 @@ test('fixed mood controls choose the nearest copy on the circular track', () => 
   assert.equal(nearestMoodPosition(31, 1, 15), 31)
 })
 
-test('release velocity projects a restrained snap of at most three steps', () => {
-  assert.equal(projectMoodSnap(4.1, -4, 104, 160, 3), 7)
-  assert.equal(projectMoodSnap(4.1, 4, 104, 160, 3), 1)
-  assert.equal(projectMoodSnap(4.6, 0, 104, 160, 3), 5)
+test('release velocity adds at most one extra step at the direct swipe sensitivity', () => {
+  assert.equal(ECHO_MOOD_MAX_FLING_STEPS, 1)
+  assert.equal(projectMoodSnap(4.1, -4, 28, 160), 5)
+  assert.equal(projectMoodSnap(4.1, 4, 28, 160), 3)
+  assert.equal(projectMoodSnap(4.6, 0, 28, 160), 5)
 })
 
 test('orbital poses expose only the current mood', () => {
