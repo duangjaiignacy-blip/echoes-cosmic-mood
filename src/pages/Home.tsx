@@ -129,7 +129,7 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
   return (
     <div className={`screen screen-scroll ${echoVoid ? 'screen--echo-void' : ''}`}>
       <div className="topbar">
-        <div className="eyebrow">ECHOES · 回响</div>
+        <div className="eyebrow">Milo-米洛</div>
         {step === 'feel' ? (
           <button className="back-link" onClick={onTimeline}>
             回忆 {entryCount > 0 ? `· ${entryCount}` : ''}
