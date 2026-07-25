@@ -16,30 +16,20 @@ interface Props {
 
 export function MoodOrbitCarousel({ position, activeIndex, phase, onSelect }: Props) {
   const stopDrag = (event: PointerEvent<HTMLButtonElement>) => event.stopPropagation()
+  const activeMood = ECHO_MOODS[activeIndex]
+  const pose = orbitalMoodPose(activeIndex, position, ECHO_MOODS.length)
+  const style: CSSProperties = {
+    opacity: pose.opacity,
+    zIndex: pose.zIndex,
+    transform: `translate3d(calc(-50% + ${pose.x}px), -50%, 0) scale(${pose.scale})`,
+  }
 
   return (
     <div className={`mood-orbit-carousel is-${phase}`} data-orbit-phase={phase}>
       <div className="mood-orbit-lane" aria-hidden="true">
-        {ECHO_MOODS.map((mood, index) => {
-          const pose = orbitalMoodPose(index, position, ECHO_MOODS.length)
-          const style: CSSProperties = {
-            opacity: pose.opacity,
-            zIndex: pose.zIndex,
-            visibility: pose.visible ? 'visible' : 'hidden',
-            transform: `translate3d(calc(-50% + ${pose.x}px), calc(-50% + ${pose.y}px), 0) scale(${pose.scale})`,
-          }
-
-          return (
-            <div
-              key={mood.id}
-              className={`mood-orbit-item ${index === activeIndex ? 'is-active' : ''}`}
-              data-mood-id={mood.id}
-              style={style}
-            >
-              <MoodPlanetImage moodId={mood.id} alt="" size={ORB_VIEWPORT_SIZE} />
-            </div>
-          )
-        })}
+        <div className="mood-orbit-item is-active" data-mood-id={activeMood.id} style={style}>
+          <MoodPlanetImage moodId={activeMood.id} alt="" size={ORB_VIEWPORT_SIZE} />
+        </div>
       </div>
 
       <div className="mood-orbit-steps" aria-label="全部情绪">

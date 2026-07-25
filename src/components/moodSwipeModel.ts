@@ -73,13 +73,14 @@ export function projectMoodSnap(
 export function orbitalMoodPose(index: number, position: number, count: number): OrbitalMoodPose {
   const distance = nearestMoodPosition(position, index, count) - position
   const absoluteDistance = Math.abs(distance)
+  const isActive = wrapMoodIndex(index, count) === activeMoodIndex(position, count)
 
-  if (absoluteDistance > 2.5) {
+  if (!isActive) {
     return {
       visible: false,
       x: distance * ECHO_MOOD_STEP_PX,
-      y: 72,
-      scale: 0.58,
+      y: 0,
+      scale: 0.96,
       opacity: 0,
       zIndex: 0,
     }
@@ -88,10 +89,10 @@ export function orbitalMoodPose(index: number, position: number, count: number):
   return {
     visible: true,
     x: distance * ECHO_MOOD_STEP_PX,
-    y: absoluteDistance * absoluteDistance * 20,
-    scale: Math.max(0.58, 1 - absoluteDistance * 0.18),
-    opacity: Math.max(0.12, 1 - absoluteDistance * 0.34),
-    zIndex: 30 - Math.round(absoluteDistance * 8),
+    y: 0,
+    scale: 1 - absoluteDistance * 0.08,
+    opacity: 1,
+    zIndex: 30,
   }
 }
 

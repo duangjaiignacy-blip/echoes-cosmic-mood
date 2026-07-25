@@ -23,6 +23,14 @@ test('the orbit exposes all fifteen fixed mood controls', async () => {
   assert.match(carousel, /const ORB_VIEWPORT_SIZE = 348/)
 })
 
+test('the orbit renders only the active mood artwork', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const carousel = await readFile(carouselUrl, 'utf8')
+
+  assert.match(carousel, /const activeMood = ECHO_MOODS\[activeIndex\]/)
+  assert.match(carousel, /<MoodPlanetImage moodId=\{activeMood\.id\}/)
+})
+
 test('keyboard focus follows the circular mood dial instead of drawing a square browser outline', () => {
   assert.match(css, /\.echo-feel-dial:focus-visible\s*\{[^}]*outline:\s*none/s)
   assert.match(css, /\.echo-feel-dial:focus-visible \.dial-ring\s*\{[^}]*filter:\s*drop-shadow/s)

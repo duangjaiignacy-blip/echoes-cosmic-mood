@@ -37,7 +37,7 @@ test('release velocity projects a restrained snap of at most three steps', () =>
   assert.equal(projectMoodSnap(4.6, 0, 104, 160, 3), 5)
 })
 
-test('orbital poses preserve the center and form lower neighboring steps', () => {
+test('orbital poses expose only the current mood', () => {
   const center = orbitalMoodPose(4, 4, 15)
   const previous = orbitalMoodPose(3, 4, 15)
   const next = orbitalMoodPose(5, 4, 15)
@@ -51,14 +51,21 @@ test('orbital poses preserve the center and form lower neighboring steps', () =>
     opacity: 1,
     zIndex: 30,
   })
-  assert.equal(previous.x < 0, true)
-  assert.equal(next.x > 0, true)
-  assert.equal(previous.y > center.y, true)
-  assert.equal(next.y > center.y, true)
-  assert.equal(previous.scale < center.scale, true)
-  assert.equal(next.scale < center.scale, true)
+  assert.equal(previous.visible, false)
+  assert.equal(previous.opacity, 0)
+  assert.equal(next.visible, false)
+  assert.equal(next.opacity, 0)
   assert.equal(remote.visible, false)
   assert.equal(remote.opacity, 0)
+})
+
+test('continuous movement never exposes more than one mood at once', () => {
+  for (const position of [3, 3.49, 3.5, 3.51, 4, 14.75, 15]) {
+    const visible = Array.from({ length: 15 }, (_, index) => index)
+      .filter((index) => orbitalMoodPose(index, position, 15).visible)
+
+    assert.deepEqual(visible, [activeMoodIndex(position, 15)])
+  }
 })
 
 test('the abrupt impact and bounce timers are no longer public behavior', () => {
