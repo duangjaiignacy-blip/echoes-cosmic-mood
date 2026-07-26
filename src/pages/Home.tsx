@@ -172,10 +172,6 @@ export function Home({ echoVoid = false, onNext, onTimeline, entryCount }: Props
 
       {step === 'feel' ? (
         <>
-          <div className="feel-heading" style={{ textAlign: 'center', marginTop: 6 }}>
-            <h1 className={`title ${echoVoid ? 'echo-feel-title' : ''}`}>此刻，你的心里泛起了什么？</h1>
-          </div>
-
           {/* 拨盘 */}
           <div
             ref={echoVoid ? moodSwipe : feelDial}

@@ -11,9 +11,10 @@ import type { Entry, StickerTemplateId } from '../types'
 interface Props {
   entry: Entry
   onDone: () => void
+  onHome: () => void
 }
 
-export function Card({ entry, onDone }: Props) {
+export function Card({ entry, onDone, onHome }: Props) {
   const [selected, setSelected] = useState<StickerTemplateId>(() =>
     normalizeStickerTemplate(entry.stickerTemplate),
   )
@@ -52,8 +53,8 @@ export function Card({ entry, onDone }: Props) {
       } catch (error) {
         if (active && !(error instanceof DOMException && error.name === 'AbortError')) {
           setUrls({})
-          setRenderError(error instanceof Error ? error.message : '贴纸显影失败，请稍后再试。')
-          console.error('[Card] 贴纸渲染失败', error)
+          setRenderError(error instanceof Error ? error.message : '卡片显影失败，请稍后再试。')
+          console.error('[Card] 卡片渲染失败', error)
         }
       }
     }
@@ -81,21 +82,6 @@ export function Card({ entry, onDone }: Props) {
     anchor.click()
   }
 
-  const share = async () => {
-    if (!url) return
-    try {
-      const blob = await (await fetch(url)).blob()
-      const file = new File([blob], 'milo-memory.png', { type: 'image/png' })
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: '米洛 · 一段回忆' })
-        return
-      }
-    } catch {
-      /* 用户取消或系统不支持时回退到下载 */
-    }
-    download()
-  }
-
   return (
     <main className="screen screen-scroll memory-sticker-screen">
       <header className="topbar">
@@ -106,7 +92,7 @@ export function Card({ entry, onDone }: Props) {
 
       <section className="sticker-intro">
         <p className="eyebrow">MILO MEMORY</p>
-        <h1 className="title">你的情绪票根</h1>
+        <h1 className="title">你的情绪卡片</h1>
         <p className="subtitle">把这颗星球，分享给今天的世界。</p>
       </section>
 
@@ -116,7 +102,7 @@ export function Card({ entry, onDone }: Props) {
             key={selected}
             className="sticker-preview-image"
             src={url}
-            alt={`${STICKER_TEMPLATES.find((item) => item.id === selected)?.name ?? '回忆'}贴纸预览`}
+            alt={`${STICKER_TEMPLATES.find((item) => item.id === selected)?.name ?? '回忆卡片'}预览`}
           />
         ) : renderError ? (
           <div className="sticker-preview-skeleton sticker-preview-error">
@@ -127,7 +113,7 @@ export function Card({ entry, onDone }: Props) {
           </div>
         ) : (
           <div className="sticker-preview-skeleton">
-            <span>贴纸显影中…</span>
+            <span>卡片显影中…</span>
           </div>
         )}
       </section>
@@ -136,7 +122,7 @@ export function Card({ entry, onDone }: Props) {
         <div className="template-picker-heading">
           <div>
             <p className="template-kicker">LAYOUTS</p>
-            <h2 id="template-title">选择贴纸模板</h2>
+            <h2 id="template-title">选择卡片模板</h2>
           </div>
           <span>{STICKER_TEMPLATES.findIndex((item) => item.id === selected) + 1} / {STICKER_TEMPLATES.length}</span>
         </div>
@@ -174,8 +160,8 @@ export function Card({ entry, onDone }: Props) {
         <button className="btn" onClick={download} disabled={!url}>
           保存图片
         </button>
-        <button className="btn btn-primary" onClick={() => void share()} disabled={!url}>
-          分享
+        <button className="btn btn-primary" onClick={onHome}>
+          回到首页
         </button>
       </footer>
     </main>

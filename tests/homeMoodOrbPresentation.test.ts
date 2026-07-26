@@ -7,6 +7,11 @@ const css = readFileSync(new URL('../src/index.css', import.meta.url), 'utf8')
 const carouselUrl = new URL('../src/components/MoodOrbitCarousel.tsx', import.meta.url)
 const moodSwipeUrl = new URL('../src/lib/useMoodSwipe.ts', import.meta.url)
 
+test('the first mood step omits the old question heading', () => {
+  assert.doesNotMatch(home, /此刻，你的心里泛起了什么？/)
+  assert.doesNotMatch(css, /\.echo-feel-title/)
+})
+
 test('echo mode uses the original raster orbit on both chooser steps', () => {
   assert.match(home, /import \{ MoodOrbitCarousel \}/)
   assert.match(home, /import \{ MoodPlanetImage \}/)
